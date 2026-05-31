@@ -1,5 +1,22 @@
 let currentFilter = 'all';
 
+const categoryAliases = {
+    '军事冲突': '军事行动',
+    '军事行动': '军事行动',
+    '政治事件': '政治事件',
+    '政治暴力': '政治事件',
+    '政治革命': '政治事件'
+};
+
+function normalizeCategory(category) {
+    return categoryAliases[category] || category;
+}
+
+function normalizedCategoriesFor(event) {
+    const rawCategories = event.categories || (event.type ? [event.type] : []);
+    return [...new Set(rawCategories.map(normalizeCategory))];
+}
+
 function renderTimeline() {
     const container = document.getElementById('timeline-container');
     if (!container) return;
@@ -9,7 +26,7 @@ function renderTimeline() {
     }
     let filtered = eventsData.filter(ev => {
         if (currentFilter === 'all') return true;
-        return ev.categories && ev.categories.includes(currentFilter);
+        return normalizedCategoriesFor(ev).includes(currentFilter);
     });
     filtered.sort((a,b)=> new Date(a.start) - new Date(b.start));
     container.innerHTML = filtered.map(ev => {
@@ -23,9 +40,9 @@ function renderTimeline() {
             <div class="timeline-date">${year} <span class="importance">${ev.importance}</span></div>
             <div class="timeline-title">${ev.name}</div>
             <div class="timeline-desc">${ev.desc}</div>
-            <div style="font-size:0.8rem; margin-top:6px; color:#666;">📍 ${ev.location} &nbsp;| 类型: ${ev.categories ? ev.categories.join('、') : ev.type}</div>
+            <div class="timeline-meta"><span><i class="fas fa-map-marker-alt"></i> ${ev.location}</span><span>${normalizedCategoriesFor(ev).join('、')}</span></div>
             ${originalHtml}
-            <button class="timeline-btn" data-loc="${ev.location}">🗺️ 查看地图</button>
+            <button class="timeline-btn" data-loc="${ev.location}"><i class="fas fa-map-marked-alt"></i> 查看地图</button>
         </div>`;
     }).join('');
     
@@ -58,9 +75,7 @@ function bindFilters() {
     if (!filterContainer) return;
     const categoriesSet = new Set();
     eventsData.forEach(ev => {
-        if (ev.categories) {
-            ev.categories.forEach(cat => categoriesSet.add(cat));
-        }
+        normalizedCategoriesFor(ev).forEach(cat => categoriesSet.add(cat));
     });
     const categories = Array.from(categoriesSet).sort();
     let html = '<span>筛选类型：</span>';
@@ -81,6 +96,8 @@ function bindFilters() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    const countEl = document.getElementById('timelineCount');
+    if (countEl && typeof eventsData !== 'undefined') countEl.textContent = eventsData.length;
     bindFilters();
     renderTimeline();
 });

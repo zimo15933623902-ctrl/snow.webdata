@@ -179,6 +179,7 @@ function initNetwork() {
             icon: person.name.slice(0, 1),
             desc: person.bio,
             text: person.original_text,
+            edgeLabel: relationLabel,
             source: person,
             children: () => relatedToPerson(person)
         };
@@ -289,25 +290,22 @@ function initNetwork() {
         return presets[Math.min(Math.max(count, 1), 10)] || presets[8];
     }
 
-    function expandedPositionsFor(count) {
-        const presets = {
-            1: [[62, 52]],
-            2: [[58, 39], [58, 65]],
-            3: [[54, 31], [72, 52], [54, 73]],
-            4: [[50, 28], [73, 39], [76, 62], [52, 75]],
-            5: [[47, 25], [68, 32], [80, 51], [66, 72], [46, 74]],
-            6: [[45, 24], [63, 28], [78, 43], [78, 63], [62, 76], [44, 70]],
-            7: [[44, 23], [61, 25], [76, 38], [80, 56], [69, 72], [51, 78], [41, 60]],
-            8: [[43, 23], [58, 22], [72, 32], [81, 48], [76, 65], [62, 76], [46, 76], [40, 52]],
-            9: [[43, 23], [56, 22], [69, 29], [79, 42], [81, 58], [71, 72], [57, 78], [43, 70], [39, 50]],
-            10: [[43, 23], [55, 21], [68, 27], [78, 39], [82, 53], [76, 67], [63, 76], [49, 77], [40, 65], [39, 40]]
-        };
-        return presets[Math.min(Math.max(count, 1), 10)] || presets[8];
+    function centerPosition(depth) {
+        return { x: 50, y: 52 };
     }
 
-    function centerPosition(depth) {
-        if (depth <= 1) return { x: 47, y: 52 };
-        return { x: 24, y: 52 };
+    function circularPositionsFor(count, center) {
+        if (count <= 1) return [{ x: center.x + 24, y: center.y }];
+        const radiusX = count >= 9 ? 32 : 29;
+        const radiusY = count >= 9 ? 31 : 28;
+        const startAngle = -90;
+        return Array.from({ length: count }, (_, index) => {
+            const angle = (startAngle + index * 360 / count) * Math.PI / 180;
+            return {
+                x: Math.max(15, Math.min(85, center.x + Math.cos(angle) * radiusX)),
+                y: Math.max(16, Math.min(84, center.y + Math.sin(angle) * radiusY))
+            };
+        });
     }
 
     function render(parent = centerNode, nodes = currentNodes) {
@@ -319,11 +317,11 @@ function initNetwork() {
         svg.setAttribute('preserveAspectRatio', 'none');
         const center = centerPosition(trail.length);
         renderNode(parent, center.x, center.y, parent.type === 'center' ? 'center' : 'branch active');
-        const positions = trail.length <= 1 ? positionsFor(currentNodes.length) : expandedPositionsFor(currentNodes.length);
+        const positions = circularPositionsFor(currentNodes.length, center);
         positions.slice(0, currentNodes.length).forEach((position, index) => {
             const node = currentNodes[index];
-            renderLine(center.x, center.y, position[0], position[1]);
-            renderNode(node, position[0], position[1], node.type === 'category' ? 'branch' : 'leaf');
+            renderLine(center.x, center.y, position.x, position.y, node.edgeLabel || '');
+            renderNode(node, position.x, position.y, node.type === 'category' ? 'branch' : 'leaf');
         });
         renderList(currentNodes);
         renderDetail(parent);
@@ -332,7 +330,8 @@ function initNetwork() {
         if (backButton) backButton.disabled = historyStack.length === 0;
     }
 
-    function renderLine(x1, y1, x2, y2) {
+    function renderLine(x1, y1, x2, y2, label = '') {
+        const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
         line.setAttribute('x1', `${x1}`);
         line.setAttribute('y1', `${y1}`);
@@ -348,7 +347,36 @@ function initNetwork() {
         arrow.setAttribute('cy', `${y2}`);
         arrow.setAttribute('r', '3.5');
         arrow.setAttribute('fill', 'rgba(179,45,45,0.34)');
-        svg.append(line, arrow);
+        group.append(line, arrow);
+        if (label && label !== '地点' && label !== '人物' && label !== '事件类型') {
+            const midX = x1 + (x2 - x1) * 0.56;
+            const midY = y1 + (y2 - y1) * 0.56;
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', `${midX}`);
+            text.setAttribute('y', `${midY}`);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'middle');
+            text.setAttribute('fill', '#8f2525');
+            text.setAttribute('font-size', '0.72');
+            text.setAttribute('font-weight', '700');
+            text.setAttribute('paint-order', 'stroke');
+            text.setAttribute('stroke', 'rgba(255,255,255,0.96)');
+            text.setAttribute('stroke-width', '0.45');
+            text.textContent = compactLabel(label);
+            const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+            title.textContent = label;
+            text.appendChild(title);
+            group.appendChild(text);
+        }
+        svg.appendChild(group);
+    }
+
+    function compactLabel(label) {
+        const cleanLabel = String(label)
+            .replace(/\s+/g, '')
+            .replace(/\/+/g, '·')
+            .replace(/（.*?）|\(.*?\)/g, '');
+        return cleanLabel;
     }
 
     function renderNode(node, x, y, className) {
