@@ -1,0 +1,3 @@
+// config.js.example - 复制此文件为 config.js 并填入真实 Key
+const DEEPSEEK_API_KEY = 'your-api-key-here';
+const API_URL = 'https://api.deepseek.com/v1/chat/completions';
