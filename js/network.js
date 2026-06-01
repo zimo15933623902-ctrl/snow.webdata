@@ -1,6 +1,5 @@
 function initNetwork() {
     const graph = document.getElementById('logicGraph');
-    const svg = document.getElementById('graphLines');
     const list = document.getElementById('nodeList');
     const detail = document.getElementById('nodeDetail');
     const search = document.getElementById('graphSearch');
@@ -8,75 +7,81 @@ function initNetwork() {
     const panelSubtitle = document.getElementById('panelSubtitle');
     const backButton = document.getElementById('graphBack');
     const homeButton = document.getElementById('graphHome');
-    if (!graph || !svg || !list) return;
+    if (!graph || !list) return;
 
+    if (typeof echarts === 'undefined') {
+        graph.innerHTML = '<div style="padding:2rem;color:#8f2525;font-weight:700;">图谱组件加载失败，请刷新页面或检查网络。</div>';
+        return;
+    }
+
+    const chart = echarts.init(graph);
     const snowName = '埃德加·斯诺';
     const snowImage = 'images/edgar-snow-bg.jpg';
-    const directRelations = relations.filter(relation => relation.source === snowName || relation.target === snowName);
+    const allLocations = typeof locations !== 'undefined' ? locations : [];
+    const allEvents = typeof eventsData !== 'undefined' ? eventsData : [];
+    const allWorks = typeof works !== 'undefined' ? works : [];
+    const allOrganizations = typeof organizations !== 'undefined' ? organizations : [];
+    const allPersons = typeof persons !== 'undefined' ? persons : [];
+    const allRelations = typeof relations !== 'undefined' ? relations : [];
+    const directRelations = allRelations.filter(relation => relation.source === snowName || relation.target === snowName);
     const directPersonNames = new Set(directRelations.map(relation => relation.source === snowName ? relation.target : relation.source));
 
+    const centerNode = {
+        id: 'snow',
+        title: snowName,
+        subtitle: '中心人物',
+        type: 'center',
+        icon: '斯',
+        image: snowImage,
+        desc: '美国记者，首位深入红区采访毛泽东。点击周围知识节点，可按主题逐层展开人物、地点、事件与文本线索。',
+        text: allPersons.find(person => person.name === snowName)?.original_text || ''
+    };
+
     const categoryDefinitions = [
-// 1. works 类别：显示所有作品（不切片）
         {
             id: 'works',
             title: '著作',
-            subtitle: '报道、译介与回忆构成的文本线索（共' + (typeof works !== 'undefined' ? works.length : '0') + '部）',
+            subtitle: `报道、译介与回忆构成的文本线索（共 ${allWorks.length} 部）`,
             icon: '书',
             type: 'category',
-            items: () => {
-                if (typeof works !== 'undefined' && works.length) {
-                    return works.map(work => workNode(work.title, work.type || '著作', work.description));
-                }
-                return [];
-            }
+            items: () => allWorks.map(work => workNode(work))
         },
-        // 2. institutions 类别：显示所有组织
         {
             id: 'institutions',
             title: '机构',
-            subtitle: '报刊、大学、组织与革命力量（共' + (typeof organizations !== 'undefined' ? organizations.length : '0') + '个）',
+            subtitle: `报刊、大学、组织与革命力量（共 ${allOrganizations.length} 个）`,
             icon: '机',
             type: 'category',
-            items: () => {
-                if (typeof organizations !== 'undefined' && organizations.length) {
-                    return organizations.map(org => institutionNode(org.name, org.type, org.description));
-                }
-                return [];
-            }
+            items: () => allOrganizations.map(org => institutionNode(org))
         },
-        // 3. persons 类别：显示前30位（原为10，可增大）
         {
             id: 'persons',
             title: '人物',
-            subtitle: '与斯诺发生采访、合作或政治关联的人（共' + persons.length + '位）',
+            subtitle: `与斯诺发生采访、合作或政治关联的人（共 ${allPersons.filter(person => person.name !== snowName).length} 位）`,
             icon: '人',
             type: 'category',
-            items: () => persons
+            items: () => allPersons
                 .filter(person => person.name !== snowName)
                 .sort((a, b) => Number(directPersonNames.has(b.name)) - Number(directPersonNames.has(a.name)))
-                .slice(0, 30)   // 增大到30
                 .map(person => personNode(person))
         },
-        // 4. locations 类别：显示前20（原为10）
         {
             id: 'locations',
             title: '地点',
-            subtitle: '1928—1941 年在中国的关键足迹（共' + locations.length + '个）',
+            subtitle: `1928—1941 年在中国的关键足迹（共 ${allLocations.length} 个）`,
             icon: '地',
             type: 'category',
-            items: () => locations.slice(0, 20).map(location => locationNode(location))
+            items: () => allLocations.map(location => locationNode(location))
         },
-        // 5. events 类别：显示前20（原为9）
         {
             id: 'history',
             title: '历史影响',
-            subtitle: '斯诺记录并解释的时代事件（共' + eventsData.length + '个）',
+            subtitle: `斯诺记录并解释的时代事件（共 ${allEvents.length} 个）`,
             icon: '史',
             type: 'category',
-            items: () => eventsData
+            items: () => allEvents
                 .slice()
                 .sort((a, b) => importanceWeight(b.importance) - importanceWeight(a.importance))
-                .slice(0, 20)
                 .map(event => eventNode(event))
         },
         {
@@ -99,9 +104,9 @@ function initNetwork() {
             subtitle: '最直接影响斯诺写作的对象',
             icon: '访',
             type: 'category',
-            items: () => directRelations.slice(0, 8).map(relation => {
+            items: () => directRelations.map(relation => {
                 const targetName = relation.source === snowName ? relation.target : relation.source;
-                const person = persons.find(item => item.name === targetName);
+                const person = allPersons.find(item => item.name === targetName);
                 return personNode(person, relation.relation);
             }).filter(Boolean)
         },
@@ -111,22 +116,11 @@ function initNetwork() {
             subtitle: '理解斯诺叙事的历史底色',
             icon: '背',
             type: 'category',
-            items: () => eventsData
+            items: () => allEvents
                 .filter(event => ['五四运动', '辛亥革命', '太平天国运动', '日俄战争', '中法战争'].includes(event.name))
                 .map(event => eventNode(event))
         }
     ];
-
-    const centerNode = {
-        id: 'snow',
-        title: snowName,
-        subtitle: '中心人物',
-        type: 'center',
-        icon: '斯',
-        image: snowImage,
-        desc: '美国记者，首位深入红区采访毛泽东。点击周围知识节点，可按主题逐层展开人物、地点、事件与文本线索。',
-        text: persons.find(person => person.name === snowName)?.original_text || ''
-    };
 
     let currentParent = centerNode;
     let currentNodes = categoryDefinitions.map(category => ({ ...category }));
@@ -139,7 +133,17 @@ function initNetwork() {
     }
 
     function safeId(prefix, value) {
-        return `${prefix}-${String(value).replace(/[^\u4e00-\u9fa5a-zA-Z0-9]+/g, '-')}`;
+        return `${prefix}-${String(value || prefix).replace(/[^\u4e00-\u9fa5a-zA-Z0-9]+/g, '-')}`;
+    }
+
+    function includesAny(text, values) {
+        const haystack = String(text || '');
+        return values.filter(Boolean).some(value => haystack.includes(value));
+    }
+
+    function aliasesFor(item) {
+        if (!item || !item.alias) return [];
+        return Array.isArray(item.alias) ? item.alias : [item.alias];
     }
 
     function eventNode(event) {
@@ -165,9 +169,8 @@ function initNetwork() {
             icon: '地',
             desc: location.desc,
             source: location,
-            children: () => eventsData
+            children: () => allEvents
                 .filter(event => event.location === location.name)
-                .slice(0, 6)
                 .map(event => eventNode(event))
         };
     }
@@ -188,17 +191,18 @@ function initNetwork() {
         };
     }
 
-    function workNode(title, subtitle, desc) {
+    function workNode(work) {
+        const title = work.title || work.name || '未命名著作';
         return {
-            id: safeId('work', title),
+            id: safeId('work', work.id || title),
             title,
-            subtitle,
+            subtitle: work.type || '著作',
             type: 'work',
             icon: '书',
-            desc,
-            children: () => eventsData
-                .filter(event => event.event_text && event.event_text.includes(title.replace('我在', '')))
-                .slice(0, 4)
+            desc: work.description || work.desc || '',
+            source: work,
+            children: () => allEvents
+                .filter(event => includesAny(`${event.name}${event.desc || ''}${event.event_text || ''}`, [title, title.replace('我在', '')]))
                 .map(event => eventNode(event))
         };
     }
@@ -212,35 +216,57 @@ function initNetwork() {
             icon: '历',
             desc,
             children: () => {
-                const location = locations.find(item => item.name === locationName);
-                const events = eventsData.filter(event => event.location === locationName).slice(0, 4).map(event => eventNode(event));
+                const location = allLocations.find(item => item.name === locationName);
+                const events = allEvents.filter(event => event.location === locationName).map(event => eventNode(event));
                 return location ? [locationNode(location), ...events] : events;
             }
         };
     }
 
-    function institutionNode(title, subtitle, desc) {
+    function institutionNode(org) {
+        const aliases = [org.name, ...aliasesFor(org)];
         return {
-            id: safeId('institution', title),
-            title,
-            subtitle,
+            id: safeId('institution', org.id || org.name),
+            title: org.name,
+            subtitle: [org.type, org.location].filter(Boolean).join(' · ') || '机构',
             type: 'institution',
             icon: '机',
-            desc,
-            children: () => persons
-                .filter(person => person.original_text?.includes(title) || person.bio?.includes(title))
-                .slice(0, 5)
-                .map(person => personNode(person))
+            desc: org.description || org.desc || '',
+            source: org,
+            children: () => relatedToInstitution(org, aliases)
         };
+    }
+
+    function relatedToInstitution(org, aliases) {
+        const output = [];
+        allPersons.forEach(person => {
+            const haystack = `${person.name}${person.bio || ''}${person.original_text || ''}`;
+            if (includesAny(haystack, aliases) && person.name !== snowName) output.push(personNode(person));
+        });
+        allEvents.forEach(event => {
+            const haystack = `${event.name}${event.desc || ''}${event.event_text || ''}${event.location || ''}`;
+            if (includesAny(haystack, aliases)) output.push(eventNode(event));
+        });
+        if (org.location) {
+            allLocations
+                .filter(location => location.name === org.location)
+                .forEach(location => output.unshift(locationNode(location)));
+        }
+        return uniqueNodes(output);
     }
 
     function relatedToEvent(event) {
         const output = [];
-        const location = locations.find(item => item.name === event.location);
+        const location = allLocations.find(item => item.name === event.location);
         if (location) output.push(locationNode(location));
-        persons.forEach(person => {
+        allPersons.forEach(person => {
             const haystack = `${event.desc || ''}${event.event_text || ''}`;
             if (haystack.includes(person.name) && person.name !== snowName) output.push(personNode(person));
+        });
+        allOrganizations.forEach(org => {
+            const aliases = [org.name, ...aliasesFor(org)];
+            const haystack = `${event.desc || ''}${event.event_text || ''}`;
+            if (includesAny(haystack, aliases)) output.push(institutionNode(org));
         });
         if (!output.length && event.categories) {
             event.categories.forEach(category => output.push({
@@ -252,23 +278,28 @@ function initNetwork() {
                 desc: `“${event.name}”所属的事件类型：${category}。`
             }));
         }
-        return output.slice(0, 7);
+        return uniqueNodes(output);
     }
 
     function relatedToPerson(person) {
-        const output = relations
+        const output = allRelations
             .filter(relation => relation.source === person.name || relation.target === person.name)
             .map(relation => {
                 const targetName = relation.source === person.name ? relation.target : relation.source;
-                const relatedPerson = persons.find(item => item.name === targetName);
+                const relatedPerson = allPersons.find(item => item.name === targetName);
                 return personNode(relatedPerson, relation.relation);
             })
             .filter(Boolean);
-        eventsData.forEach(event => {
+        allEvents.forEach(event => {
             const haystack = `${event.desc || ''}${event.event_text || ''}`;
             if (haystack.includes(person.name)) output.push(eventNode(event));
         });
-        return output.slice(0, 7);
+        allOrganizations.forEach(org => {
+            const aliases = [org.name, ...aliasesFor(org)];
+            const haystack = `${person.bio || ''}${person.original_text || ''}`;
+            if (includesAny(haystack, aliases)) output.push(institutionNode(org));
+        });
+        return uniqueNodes(output);
     }
 
     function nodeChildren(node) {
@@ -277,54 +308,88 @@ function initNetwork() {
         return [];
     }
 
-    function positionsFor(count) {
-        const presets = {
-            1: [[66, 48]],
-            2: [[63, 38], [63, 62]],
-            3: [[60, 31], [73, 50], [60, 69]],
-            4: [[57, 28], [72, 41], [72, 62], [57, 74]],
-            5: [[52, 25], [70, 36], [76, 53], [65, 72], [47, 69]],
-            6: [[48, 24], [66, 30], [76, 48], [67, 67], [49, 74], [38, 52]],
-            7: [[44, 24], [61, 26], [74, 39], [76, 58], [63, 72], [45, 75], [35, 51]],
-            8: [[41, 24], [57, 23], [71, 34], [77, 50], [71, 66], [57, 76], [41, 75], [32, 52]],
-            9: [[40, 24], [55, 22], [68, 31], [77, 45], [76, 61], [64, 73], [49, 77], [35, 68], [30, 50]],
-            10: [[39, 24], [52, 22], [65, 28], [75, 39], [78, 53], [72, 66], [60, 75], [45, 77], [32, 67], [28, 51]]
-        };
-        return presets[Math.min(Math.max(count, 1), 10)] || presets[8];
-    }
-
-    function centerPosition(depth) {
-        return { x: 50, y: 52 };
-    }
-
-    function circularPositionsFor(count, center) {
-        if (count <= 1) return [{ x: center.x + 24, y: center.y }];
-        const radiusX = count >= 9 ? 32 : 29;
-        const radiusY = count >= 9 ? 31 : 28;
-        const startAngle = -90;
-        return Array.from({ length: count }, (_, index) => {
-            const angle = (startAngle + index * 360 / count) * Math.PI / 180;
-            return {
-                x: Math.max(15, Math.min(85, center.x + Math.cos(angle) * radiusX)),
-                y: Math.max(16, Math.min(84, center.y + Math.sin(angle) * radiusY))
-            };
+    function uniqueNodes(nodes) {
+        const unique = [];
+        const seen = new Set();
+        nodes.filter(Boolean).forEach(node => {
+            if (!seen.has(node.id)) {
+                seen.add(node.id);
+                unique.push(node);
+            }
         });
+        return unique;
     }
 
     function render(parent = centerNode, nodes = currentNodes) {
         currentParent = parent;
-        currentNodes = nodes.filter(Boolean).slice(0, 10);
-        graph.innerHTML = '';
-        svg.innerHTML = '';
-        svg.setAttribute('viewBox', '0 0 100 100');
-        svg.setAttribute('preserveAspectRatio', 'none');
-        const center = centerPosition(trail.length);
-        renderNode(parent, center.x, center.y, parent.type === 'center' ? 'center' : 'branch active');
-        const positions = circularPositionsFor(currentNodes.length, center);
-        positions.slice(0, currentNodes.length).forEach((position, index) => {
-            const node = currentNodes[index];
-            renderLine(center.x, center.y, position.x, position.y, node.edgeLabel || '');
-            renderNode(node, position.x, position.y, node.type === 'category' ? 'branch' : 'leaf');
+        currentNodes = uniqueNodes(nodes);
+        chart.clear();
+        const total = currentNodes.length;
+        const data = [parent, ...currentNodes].map((node, index) => chartNode(node, index === 0, total));
+        const links = currentNodes.map(node => chartLink(parent, node, total));
+
+        chart.setOption({
+            backgroundColor: 'transparent',
+            animationDurationUpdate: 450,
+            tooltip: {
+                trigger: 'item',
+                confine: true,
+                formatter(params) {
+                    if (params.dataType === 'edge') {
+                        return params.data.fullLabel || '关联';
+                    }
+                    const node = params.data.raw;
+                    const count = childCount(node);
+                    return `<strong>${node.title}</strong><br>${node.subtitle || node.desc || ''}<br>下一层：${count} 个节点`;
+                }
+            },
+            series: [{
+                type: 'graph',
+                layout: 'force',
+                roam: true,
+                draggable: true,
+                focusNodeAdjacency: true,
+                scaleLimit: {
+                    min: 0.35,
+                    max: 4
+                },
+                labelLayout: {
+                    hideOverlap: total > 55
+                },
+                edgeSymbol: ['none', 'arrow'],
+                edgeSymbolSize: [0, 7],
+                data,
+                links,
+                force: {
+                    initLayout: 'circular',
+                    repulsion: total > 80 ? 95 : total > 45 ? 140 : 250,
+                    gravity: total > 80 ? 0.025 : 0.04,
+                    edgeLength: total > 80 ? [58, 118] : total > 45 ? [74, 150] : [100, 210],
+                    friction: 0.34,
+                    layoutAnimation: true
+                },
+                lineStyle: {
+                    color: 'rgba(179,45,45,0.26)',
+                    width: 1.5,
+                    type: 'dashed',
+                    curveness: 0.05
+                },
+                label: {
+                    show: true
+                },
+                emphasis: {
+                    focus: 'adjacency',
+                    lineStyle: {
+                        color: '#b32d2d',
+                        width: 2.5
+                    }
+                }
+            }]
+        }, true);
+
+        chart.off('click');
+        chart.on('click', params => {
+            if (params.dataType === 'node' && params.data.raw) selectNode(params.data.raw);
         });
         renderList(currentNodes);
         renderDetail(parent);
@@ -333,68 +398,105 @@ function initNetwork() {
         if (backButton) backButton.disabled = historyStack.length === 0;
     }
 
-    function renderLine(x1, y1, x2, y2, label = '') {
-        const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        line.setAttribute('x1', `${x1}`);
-        line.setAttribute('y1', `${y1}`);
-        line.setAttribute('x2', `${x2}`);
-        line.setAttribute('y2', `${y2}`);
-        line.setAttribute('vector-effect', 'non-scaling-stroke');
-        line.setAttribute('stroke', 'rgba(179,45,45,0.24)');
-        line.setAttribute('stroke-width', '2.5');
-        line.setAttribute('stroke-dasharray', '8 9');
-        line.setAttribute('stroke-linecap', 'round');
-        const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-        arrow.setAttribute('cx', `${x2}`);
-        arrow.setAttribute('cy', `${y2}`);
-        arrow.setAttribute('r', '3.5');
-        arrow.setAttribute('fill', 'rgba(179,45,45,0.34)');
-        group.append(line, arrow);
-        if (label && label !== '地点' && label !== '人物' && label !== '事件类型') {
-            const midX = x1 + (x2 - x1) * 0.56;
-            const midY = y1 + (y2 - y1) * 0.56;
-            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            text.setAttribute('x', `${midX}`);
-            text.setAttribute('y', `${midY}`);
-            text.setAttribute('text-anchor', 'middle');
-            text.setAttribute('dominant-baseline', 'middle');
-            text.setAttribute('fill', '#8f2525');
-            text.setAttribute('font-size', '0.72');
-            text.setAttribute('font-weight', '700');
-            text.setAttribute('paint-order', 'stroke');
-            text.setAttribute('stroke', 'rgba(255,255,255,0.96)');
-            text.setAttribute('stroke-width', '0.45');
-            text.textContent = compactLabel(label);
-            const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-            title.textContent = label;
-            text.appendChild(title);
-            group.appendChild(text);
-        }
-        svg.appendChild(group);
+    function chartNode(node, isCenter, total) {
+        const childTotal = childCount(node);
+        const isActive = activeNodeId === node.id || isCenter;
+        const size = isCenter ? 86 : node.type === 'category' ? 62 : symbolSize(total, childTotal);
+        return {
+            id: node.id,
+            name: node.title,
+            raw: node,
+            value: childTotal,
+            symbol: node.image ? `image://${node.image}` : 'circle',
+            symbolSize: size,
+            draggable: true,
+            fixed: isCenter,
+            x: isCenter ? graph.clientWidth / 2 : undefined,
+            y: isCenter ? graph.clientHeight / 2 : undefined,
+            itemStyle: {
+                color: node.image ? '#fff' : nodeFill(node.type, isActive),
+                borderColor: isActive ? '#b32d2d' : 'rgba(179,45,45,0.18)',
+                borderWidth: isCenter ? 5 : 1.5,
+                shadowBlur: isCenter ? 28 : 18,
+                shadowColor: 'rgba(68,42,28,0.16)'
+            },
+            label: {
+                show: true,
+                position: isCenter ? 'bottom' : 'right',
+                distance: isCenter ? 8 : 7,
+                formatter: labelFormatter(node, isCenter, total),
+                color: isCenter ? '#fff' : '#1e1e1e',
+                fontSize: isCenter ? 13 : total > 70 ? 10 : total > 35 ? 11 : 12,
+                fontWeight: isCenter ? 800 : 700,
+                backgroundColor: isCenter ? '#b32d2d' : 'rgba(255,255,255,0.88)',
+                borderColor: 'rgba(234,223,212,0.95)',
+                borderWidth: isCenter ? 0 : 1,
+                borderRadius: 14,
+                padding: isCenter ? [6, 12] : [4, 8],
+                shadowBlur: 12,
+                shadowColor: 'rgba(68,42,28,0.08)'
+            }
+        };
     }
 
-    function compactLabel(label) {
-        const cleanLabel = String(label)
-            .replace(/\s+/g, '')
-            .replace(/\/+/g, '·')
-            .replace(/（.*?）|\(.*?\)/g, '');
-        return cleanLabel;
+    function chartLink(parent, node, total) {
+        const fullLabel = node.edgeLabel || '';
+        const showLabel = Boolean(fullLabel) && total <= 55;
+        return {
+            source: parent.id,
+            target: node.id,
+            fullLabel,
+            lineStyle: {
+                color: 'rgba(179,45,45,0.25)',
+                width: total > 60 ? 1.1 : 1.6,
+                type: 'dashed',
+                curveness: total > 50 ? 0.03 : 0.08
+            },
+            label: {
+                show: showLabel,
+                formatter: fullLabel,
+                color: '#8f2525',
+                fontSize: total > 35 ? 8 : 9,
+                fontWeight: 600,
+                backgroundColor: 'rgba(255,250,243,0.82)',
+                borderColor: 'rgba(179,45,45,0.12)',
+                borderWidth: 1,
+                borderRadius: 8,
+                padding: [2, 4]
+            }
+        };
     }
 
-    function renderNode(node, x, y, className) {
-        const button = document.createElement('button');
-        button.className = `graph-node ${className} ${activeNodeId === node.id ? 'active' : ''}`;
-        button.style.left = `${x}%`;
-        button.style.top = `${y}%`;
-        button.type = 'button';
-        button.title = node.subtitle ? `${node.title}：${node.subtitle}` : node.title;
-        button.innerHTML = `
-            <span class="node-avatar">${node.image ? `<img src="${node.image}" alt="${node.title}">` : `<span>${node.icon || node.title.slice(0, 1)}</span>`}</span>
-            <span class="node-label">${node.title}</span>
-        `;
-        button.addEventListener('click', () => selectNode(node));
-        graph.appendChild(button);
+    function symbolSize(total, childTotal) {
+        if (total > 100) return 24 + Math.min(childTotal, 8) * 1.5;
+        if (total > 70) return 30 + Math.min(childTotal, 8) * 1.6;
+        if (total > 45) return 38 + Math.min(childTotal, 8) * 1.8;
+        return 50 + Math.min(childTotal, 8) * 2;
+    }
+
+    function nodeFill(type, isActive) {
+        if (isActive) return '#fff6ef';
+        const colors = {
+            category: '#fffaf3',
+            person: '#fff7f4',
+            institution: '#fffaf3',
+            location: '#fffaf3',
+            event: '#fff7f4',
+            work: '#fffaf3'
+        };
+        return colors[type] || '#fffaf3';
+    }
+
+    function labelFormatter(node, isCenter, total) {
+        if (isCenter) return node.title;
+        if (total > 80) return shortLabel(node.title, 8);
+        if (total > 45) return shortLabel(node.title, 12);
+        return node.title;
+    }
+
+    function shortLabel(text, limit) {
+        const value = String(text || '');
+        return value.length > limit ? `${value.slice(0, limit)}…` : value;
     }
 
     function renderList(nodes) {
@@ -434,14 +536,13 @@ function initNetwork() {
         const children = nodeChildren(node);
         if (children.length) {
             pushHistory();
-            trail = node.type === 'category' ? [centerNode, node] : [...trail.filter(item => item.id !== node.id), node].slice(-3);
+            trail = node.type === 'category' ? [centerNode, node] : [...trail.filter(item => item.id !== node.id), node].slice(-4);
             render(node, children);
         } else {
             renderList(currentNodes);
             renderDetail(node);
-            document.querySelectorAll('.graph-node').forEach(item => item.classList.remove('active'));
-            const matchingNode = Array.from(document.querySelectorAll('.graph-node')).find(item => item.title.startsWith(node.title));
-            if (matchingNode) matchingNode.classList.add('active');
+            chart.dispatchAction({ type: 'downplay' });
+            chart.dispatchAction({ type: 'highlight', name: node.title });
         }
     }
 
@@ -479,18 +580,13 @@ function initNetwork() {
             return;
         }
         const results = [
-            ...persons.filter(person => `${person.name}${person.bio}${person.original_text || ''}`.includes(value)).map(person => personNode(person)),
-            ...eventsData.filter(event => `${event.name}${event.desc}${event.event_text || ''}${event.location || ''}`.includes(value)).map(event => eventNode(event)),
-            ...locations.filter(location => `${location.name}${location.type}${location.desc}`.includes(value)).map(location => locationNode(location))
+            ...allPersons.filter(person => `${person.name}${person.bio}${person.original_text || ''}`.includes(value)).map(person => personNode(person)),
+            ...allEvents.filter(event => `${event.name}${event.desc}${event.event_text || ''}${event.location || ''}`.includes(value)).map(event => eventNode(event)),
+            ...allLocations.filter(location => `${location.name}${location.type}${location.desc}`.includes(value)).map(location => locationNode(location)),
+            ...allOrganizations.filter(org => `${org.name}${org.type || ''}${org.description || ''}${org.location || ''}${aliasesFor(org).join('')}`.includes(value)).map(org => institutionNode(org)),
+            ...allWorks.filter(work => `${work.title}${work.type || ''}${work.description || ''}`.includes(value)).map(work => workNode(work))
         ];
-        const unique = [];
-        const seen = new Set();
-        results.forEach(node => {
-            if (node && !seen.has(node.id)) {
-                seen.add(node.id);
-                unique.push(node);
-            }
-        });
+        const unique = uniqueNodes(results);
         const searchRoot = {
             id: 'search-root',
             title: '搜索结果',
@@ -501,19 +597,19 @@ function initNetwork() {
         };
         trail = [centerNode, searchRoot];
         historyStack = [];
-        render(searchRoot, unique.slice(0, 10));
+        render(searchRoot, unique);
     }
 
     let searchTimer;
     search?.addEventListener('input', event => {
         clearTimeout(searchTimer);
-        searchTimer = setTimeout(() => runSearch(event.target.value), 160);
+        searchTimer = setTimeout(() => runSearch(event.target.value), 180);
     });
     backButton?.addEventListener('click', goBack);
     homeButton?.addEventListener('click', goHome);
+    window.addEventListener('resize', () => chart.resize());
 
     render(centerNode, categoryDefinitions);
-    window.addEventListener('resize', () => render(currentParent, currentNodes));
 }
 
 document.addEventListener('DOMContentLoaded', initNetwork);

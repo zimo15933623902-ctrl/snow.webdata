@@ -67,12 +67,13 @@
             z-index: 1;
             pointer-events: none;
             overflow: visible;
+            display: none;
         }
         .graph-canvas {
             position: absolute;
             inset: 28px 28px 58px;
             z-index: 2;
-            overflow: visible;
+            overflow: hidden;
         }
         .graph-node {
             position: absolute;
@@ -497,6 +498,7 @@
     </main>
     <script src="js/data.js"></script>
     <script src="js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <script src="js/network.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
     <!-- <script src="js/book-data.js"></script>   书籍全文数据 -->
