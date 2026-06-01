@@ -16,51 +16,68 @@ function initNetwork() {
     const directPersonNames = new Set(directRelations.map(relation => relation.source === snowName ? relation.target : relation.source));
 
     const categoryDefinitions = [
+// 1. works 类别：显示所有作品（不切片）
         {
-            id: 'history',
-            title: '历史影响',
-            subtitle: '斯诺记录并解释的时代事件',
-            icon: '史',
+            id: 'works',
+            title: '著作',
+            subtitle: '报道、译介与回忆构成的文本线索（共' + (typeof works !== 'undefined' ? works.length : '0') + '部）',
+            icon: '书',
             type: 'category',
-            items: () => eventsData
-                .slice()
-                .sort((a, b) => importanceWeight(b.importance) - importanceWeight(a.importance))
-                .slice(0, 9)
-                .map(event => eventNode(event))
+            items: () => {
+                if (typeof works !== 'undefined' && works.length) {
+                    return works.map(work => workNode(work.title, work.type || '著作', work.description));
+                }
+                return [];
+            }
         },
+        // 2. institutions 类别：显示所有组织
         {
-            id: 'locations',
-            title: '地点',
-            subtitle: '1928—1941 年在中国的关键足迹',
-            icon: '地',
+            id: 'institutions',
+            title: '机构',
+            subtitle: '报刊、大学、组织与革命力量（共' + (typeof organizations !== 'undefined' ? organizations.length : '0') + '个）',
+            icon: '机',
             type: 'category',
-            items: () => locations.slice(0, 10).map(location => locationNode(location))
+            items: () => {
+                if (typeof organizations !== 'undefined' && organizations.length) {
+                    return organizations.map(org => institutionNode(org.name, org.type, org.description));
+                }
+                return [];
+            }
         },
+        // 3. persons 类别：显示前30位（原为10，可增大）
         {
             id: 'persons',
             title: '人物',
-            subtitle: '与斯诺发生采访、合作或政治关联的人',
+            subtitle: '与斯诺发生采访、合作或政治关联的人（共' + persons.length + '位）',
             icon: '人',
             type: 'category',
             items: () => persons
                 .filter(person => person.name !== snowName)
                 .sort((a, b) => Number(directPersonNames.has(b.name)) - Number(directPersonNames.has(a.name)))
-                .slice(0, 10)
+                .slice(0, 30)   // 增大到30
                 .map(person => personNode(person))
         },
+        // 4. locations 类别：显示前20（原为10）
         {
-            id: 'works',
-            title: '著作',
-            subtitle: '报道、译介与回忆构成的文本线索',
-            icon: '书',
+            id: 'locations',
+            title: '地点',
+            subtitle: '1928—1941 年在中国的关键足迹（共' + locations.length + '个）',
+            icon: '地',
             type: 'category',
-            items: () => [
-                workNode('我在旧中国十三年', '自传/回忆录', '记录斯诺 1928—1941 年间在中国的经历，是本数据库的重要文本基础。'),
-                workNode('复始之旅', '回忆与观察', '从回望视角整理斯诺与中国革命、抗战和国际传播之间的关系。'),
-                workNode('红星照耀中国', '采访报道', '斯诺红区之行后的代表作，使世界第一次系统了解中国共产党与红军。'),
-                workNode('远东前线', '国际报道', '围绕日本侵华、东北与远东局势展开的新闻观察。'),
-                workNode('活的中国', '文学译介', '斯诺编译中国左翼文学作品，向英语世界介绍鲁迅等中国作家。')
-            ]
+            items: () => locations.slice(0, 20).map(location => locationNode(location))
+        },
+        // 5. events 类别：显示前20（原为9）
+        {
+            id: 'history',
+            title: '历史影响',
+            subtitle: '斯诺记录并解释的时代事件（共' + eventsData.length + '个）',
+            icon: '史',
+            type: 'category',
+            items: () => eventsData
+                .slice()
+                .sort((a, b) => importanceWeight(b.importance) - importanceWeight(a.importance))
+                .slice(0, 20)
+                .map(event => eventNode(event))
         },
         {
             id: 'journey',
@@ -87,20 +104,6 @@ function initNetwork() {
                 const person = persons.find(item => item.name === targetName);
                 return personNode(person, relation.relation);
             }).filter(Boolean)
-        },
-        {
-            id: 'institutions',
-            title: '机构',
-            subtitle: '报刊、大学、组织与革命力量',
-            icon: '机',
-            type: 'category',
-            items: () => [
-                institutionNode('密勒氏评论报', '新闻机构', '斯诺早期记者生涯的重要平台，鲍威尔是其编辑领路人。'),
-                institutionNode('燕京大学', '教育机构', '斯诺在北平任教，并由此接近学生运动与知识界。'),
-                institutionNode('中国工业合作社', '社会组织', '斯诺与路易·艾黎共同推动的抗战经济合作网络。'),
-                institutionNode('陕北红区', '革命根据地', '斯诺进入红区采访中共领袖与红军的重要空间。'),
-                institutionNode('国民政府', '政治机构', '斯诺采访、观察并批评其腐败与消极抗战。')
-            ]
         },
         {
             id: 'background',

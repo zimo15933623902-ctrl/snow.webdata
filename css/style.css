@@ -50,6 +50,7 @@ body {
     border: 1px solid #e0e0e0;
     border-radius: 24px;
     margin-bottom: 2rem;
+    padding-bottom: 2rem;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 .hero-content {
@@ -342,6 +343,14 @@ h2 {
     margin: 1rem 0;
     font-weight: 500;
 }
+.hero-meta {
+    position: relative;   /* 改为相对定位 */
+    left: auto;
+    bottom: auto;
+    margin: 1.5rem auto 0;
+    width: auto;
+    justify-content: center;
+}
 @media (max-width: 900px) {
     .map-container {
         flex-wrap: wrap;
@@ -360,6 +369,9 @@ h2 {
     }
     .portrait {
         flex: 0 0 140px;
+    }
+    .hero-meta {
+        margin-top: 0;
     }
 }
 

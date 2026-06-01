@@ -257,11 +257,13 @@
                 <div class="hero-stat"><strong id="eventCount">--</strong><span>历史事件</span></div>
                 <div class="hero-stat"><strong id="personCount">--</strong><span>核心人物</span></div>
                 <div class="hero-stat"><strong id="relationCount">--</strong><span>人物关系</span></div>
+                <div class="hero-stat"><strong id="workCount">--</strong><span>著作/报刊</span></div>
+                <div class="hero-stat"><strong id="orgCount">--</strong><span>组织机构</span></div>
             </div>
         </div>
         <div class="db-info">
             <i class="fas fa-database"></i> 数据库说明
-            <p>本数据库基于埃德加·斯诺自传《我在旧中国十三年》及《复始之旅》，提取其1928–1941年间在中国的关键足迹。涵盖<strong><span id="descLocationCount">--</span>个重要地点</strong>、<strong><span id="descEventCount">--</span>个历史事件</strong>、<strong><span id="descPersonCount">--</span>位核心人物</strong>、<strong><span id="descRelationCount">--</span>条人物关系</strong>。通过<strong>时空足迹</strong>、<strong>人物关系网</strong>、<strong>大事件年历</strong>三种方式，呈现一位美国记者如何从旁观者成长为中国革命见证者的历程。点击下方模块开始探索。</p>
+            <p>本数据库基于埃德加·斯诺自传《我在旧中国十三年》及《复始之旅》，提取其1928–1941年间在中国的关键足迹。涵盖<strong><span id="descLocationCount">--</span>个重要地点</strong>、<strong><span id="descEventCount">--</span>个历史事件</strong>、<strong><span id="descPersonCount">--</span>位核心人物</strong>、<strong><span id="descRelationCount">--</span>条人物关系</strong>、<strong><span id="descWorkCount">--</span>部著作/报刊</strong>、<strong><span id="descOrgCount">--</span>个组织机构</strong>。通过<strong>时空足迹</strong>、<strong>人物关系网</strong>、<strong>大事件年历</strong>三种方式，呈现一位美国记者如何从旁观者成长为中国革命见证者的历程。点击下方模块开始探索。</p>
             <div class="data-source">数据来源：埃德加·斯诺《我在旧中国十三年》（三联书店1973年版）及《复始之旅》</div>
         </div>
         <div class="card-grid">
@@ -289,7 +291,9 @@
             locations: typeof locations !== 'undefined' ? locations.length : '--',
             events: typeof eventsData !== 'undefined' ? eventsData.length : '--',
             persons: typeof persons !== 'undefined' ? persons.length : '--',
-            relations: typeof relations !== 'undefined' ? relations.length : '--'
+            relations: typeof relations !== 'undefined' ? relations.length : '--',
+            works: typeof works !== 'undefined' ? works.length : '--',
+            organizations: typeof organizations !== 'undefined' ? organizations.length : '--'
         };
         document.getElementById('locationCount').textContent = dataCounts.locations;
         document.getElementById('eventCount').textContent = dataCounts.events;
@@ -299,6 +303,8 @@
         document.getElementById('descEventCount').textContent = dataCounts.events;
         document.getElementById('descPersonCount').textContent = dataCounts.persons;
         document.getElementById('descRelationCount').textContent = dataCounts.relations;
+        document.getElementById('workCount').textContent = dataCounts.works;
+        document.getElementById('orgCount').textContent = dataCounts.organizations;
     </script>
     <script src="js/config.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>

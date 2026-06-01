@@ -15,7 +15,7 @@ async function askAI(question) {
         return "⚠️ 未配置 DeepSeek API Key。请复制 config.js.example 为 config.js 并填入有效密钥，或联系项目成员获取。当前仅能回答知识库内的问题。";
     }
     
-    
+
     // 2. 如果知识库没有，则调用DeepSeek API，但只发送知识库摘要，而非全书
     const context = buildContextFromKB(question);
     
@@ -64,6 +64,12 @@ function searchKnowledgeBase(question) {
     // 检查著作
     for (let [name, desc] of Object.entries(knowledgeBase.works)) {
         if (q.includes(name)) return `${name}：${desc}`;
+    }
+    // 检查机构
+    if (knowledgeBase.organizations) {
+        for (let [name, desc] of Object.entries(knowledgeBase.organizations)) {
+            if (q.includes(name)) return `${name}：${desc}`;
+        }
     }
     // 检查语录
     for (let quote of knowledgeBase.quotes) {
