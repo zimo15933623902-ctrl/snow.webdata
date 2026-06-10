@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>斯诺在中国 · 名人数据库</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=cards-3-2-final">
     <style>
         :root {
             --snow-red: #b32d2d;
@@ -84,7 +84,7 @@
         .hero-text {
             color: #fff;
             max-width: 760px;
-            padding-bottom: 8.5rem;
+            padding-bottom: 10.5rem;
         }
         .hero-kicker {
             display: inline-flex;
@@ -230,43 +230,96 @@
 </head>
 <body>
     <div class="navbar">
-        <a href="index.html" class="nav-btn active"><i class="fas fa-home"></i> 首页</a>
-        <a href="map.html" class="nav-btn"><i class="fas fa-map-marked-alt"></i> 时空足迹</a>
-        <a href="network.html" class="nav-btn"><i class="fas fa-network-wired"></i> 人物关系网</a>
-        <a href="timeline.html" class="nav-btn"><i class="fas fa-timeline"></i> 大事件年历</a>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <button id="backBtn" class="nav-btn" style="background: none; border: none; cursor: pointer;">
+                <i class="fas fa-arrow-left"></i> 返回
+            </button>
+            <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> 首页</a>
+            <a href="map.html" class="nav-btn"><i class="fas fa-map-marked-alt"></i> 时空足迹</a>
+            <a href="network.html" class="nav-btn"><i class="fas fa-network-wired"></i> 实体关系网</a>
+            <a href="timeline.html" class="nav-btn"><i class="fas fa-timeline"></i> 大事件年历</a>
+            <a href="global-network.html" class="nav-btn"><i class="fas fa-globe"></i> 全局人物网</a>
+            <a href="browse.html" class="nav-btn"><i class="fas fa-th-large"></i> 分类浏览</a>
+        </div>
+        <div style="display: flex; align-items: center;">
+            <input type="text" id="globalSearchInput" placeholder="搜索..." style="padding: 6px 12px; border-radius: 40px; border: 1px solid #ddd;">
+            <button id="globalSearchBtn" style="background: #b32d2d; border: none; color: white; padding: 6px 14px; border-radius: 40px; margin-left: 8px; cursor: pointer;">🔍</button>
+        </div>
     </div>
+    <script>
+        // 返回上一页
+        document.getElementById('backBtn')?.addEventListener('click', () => { window.history.back(); });
+        // 搜索跳转（如果搜索输入框存在）
+        const searchInput = document.getElementById('globalSearchInput');
+        const searchBtn = document.getElementById('globalSearchBtn');
+        if (searchBtn && searchInput) {
+            searchBtn.onclick = () => {
+                const q = searchInput.value.trim();
+                if (q) location.href = `search.html?q=${encodeURIComponent(q)}`;
+            };
+            searchInput.onkeypress = (e) => { if (e.key === 'Enter') searchBtn.click(); };
+        }
+    </script>
     <div class="page-container home-shell">
-        <div class="hero">
-            <div class="hero-content">
-                <div class="portrait">
-                    <img src="images/edgar-snow-bg.jpg" alt="埃德加·斯诺肖像">
+    <!-- 轮播容器 -->
+    <div class="hero-carousel">
+        <div class="carousel-slides">
+            <!-- 第一页：原有 hero 内容 -->
+            <div class="carousel-slide active">
+                <div class="hero-content">
+                    <div class="portrait">
+                        <img src="images/edgar-snow-bg.jpg" alt="埃德加·斯诺肖像">
+                    </div>
+                    <div class="hero-text">
+                        <div class="hero-kicker"><i class="fas fa-camera-retro"></i> EDGAR SNOW IN CHINA</div>
+                        <h1><span>我在旧中国</span><span>十三年</span></h1>
+                        <p>埃德加·斯诺 · 复始之旅 · 1928–1941</p>
+                        <div class="quote">“ 一个美国记者与过去中国命运的碰撞 ”</div>
+                        <div class="hero-actions">
+                            <a href="map.html" class="hero-btn primary"><i class="fas fa-map-marked-alt"></i> 开始探索</a>
+                            <a href="network.html" class="hero-btn secondary"><i class="fas fa-network-wired"></i> 查看知识图谱</a>
+                        </div>
+                    </div>
                 </div>
-                <div class="hero-text">
-                    <div class="hero-kicker"><i class="fas fa-camera-retro"></i> EDGAR SNOW IN CHINA</div>
-                    <h1><span>我在旧中国</span><span>十三年</span></h1>
-                    <p>埃德加·斯诺 · 复始之旅 · 1928–1941</p>
-                    <div class="quote">“ 一个美国记者与过去中国命运的碰撞 ”</div>
-                    <div class="hero-actions">
-                        <a href="map.html" class="hero-btn primary"><i class="fas fa-map-marked-alt"></i> 开始探索</a>
-                        <a href="network.html" class="hero-btn secondary"><i class="fas fa-network-wired"></i> 查看知识图谱</a>
+                <div class="hero-meta" aria-label="数据库数据概览">
+                        <div class="hero-stat"><strong id="locationCount">--</strong><span>重要地点</span></div>
+                        <div class="hero-stat"><strong id="eventCount">--</strong><span>历史事件</span></div>
+                        <div class="hero-stat"><strong id="personCount">--</strong><span>核心人物</span></div>
+                        <div class="hero-stat"><strong id="relationCount">--</strong><span>人物关系</span></div>
+                        <div class="hero-stat"><strong id="workCount">--</strong><span>著作/报刊</span></div>
+                        <div class="hero-stat"><strong id="orgCount">--</strong><span>组织机构</span></div>
+                </div>
+            </div>
+            <!-- 第二页：视频介绍 -->
+            <div class="carousel-slide">
+                <div class="video-slide-content">
+                    <div class="video-container">
+                        <video controls preload="metadata" playsinline>
+                            <source src="videos/red-star-china-rare-footage.mp4" type="video/mp4">
+                            您的浏览器暂不支持本地视频播放。
+                        </video>
+                    </div>
+                    <div class="video-caption">
+                        <h3>珍贵影像：《红星照耀中国》</h3>
                     </div>
                 </div>
             </div>
-            <div class="hero-meta" aria-label="数据库数据概览">
-                <div class="hero-stat"><strong id="locationCount">--</strong><span>重要地点</span></div>
-                <div class="hero-stat"><strong id="eventCount">--</strong><span>历史事件</span></div>
-                <div class="hero-stat"><strong id="personCount">--</strong><span>核心人物</span></div>
-                <div class="hero-stat"><strong id="relationCount">--</strong><span>人物关系</span></div>
-                <div class="hero-stat"><strong id="workCount">--</strong><span>著作/报刊</span></div>
-                <div class="hero-stat"><strong id="orgCount">--</strong><span>组织机构</span></div>
-            </div>
         </div>
+        <!-- 轮播指示器（圆点） -->
+        <div class="carousel-dots">
+            <span class="dot active" data-index="0"></span>
+            <span class="dot" data-index="1"></span>
+        </div>
+        <!-- 左右箭头（可选） -->
+        <button class="carousel-prev" aria-label="上一页">❮</button>
+        <button class="carousel-next" aria-label="下一页">❯</button>
+    </div>
         <div class="db-info">
             <i class="fas fa-database"></i> 数据库说明
-            <p>本数据库基于埃德加·斯诺自传《我在旧中国十三年》及《复始之旅》，提取其1928–1941年间在中国的关键足迹。涵盖<strong><span id="descLocationCount">--</span>个重要地点</strong>、<strong><span id="descEventCount">--</span>个历史事件</strong>、<strong><span id="descPersonCount">--</span>位核心人物</strong>、<strong><span id="descRelationCount">--</span>条人物关系</strong>、<strong><span id="descWorkCount">--</span>部著作/报刊</strong>、<strong><span id="descOrgCount">--</span>个组织机构</strong>。通过<strong>时空足迹</strong>、<strong>人物关系网</strong>、<strong>大事件年历</strong>三种方式，呈现一位美国记者如何从旁观者成长为中国革命见证者的历程。点击下方模块开始探索。</p>
+            <p>本数据库基于埃德加·斯诺自传《我在旧中国十三年》及《复始之旅》，提取其1928–1941年间在中国的关键足迹。涵盖<strong><span id="descLocationCount">--</span>个重要地点</strong>、<strong><span id="descEventCount">--</span>个历史事件</strong>、<strong><span id="descPersonCount">--</span>位核心人物</strong>、<strong><span id="descRelationCount">--</span>条人物关系</strong>、<strong><span id="descWorkCount">--</span>部著作/报刊</strong>、<strong><span id="descOrgCount">--</span>个组织机构</strong>。通过<strong>时空足迹</strong>、<strong>实体关系网</strong>、<strong>大事件年历</strong>、<strong>全局人物网</strong>、<strong>分类浏览</strong>等多种方式，呈现一位美国记者如何从旁观者成长为中国革命见证者的历程。点击下方模块开始探索。</p>
             <div class="data-source">数据来源：埃德加·斯诺《我在旧中国十三年》（三联书店1973年版）及《复始之旅》</div>
         </div>
-        <div class="card-grid">
+        <div class="card-grid home-module-grid">
             <div class="module-card" onclick="location.href='map.html'">
                 <div class="module-icon"><i class="fas fa-map-marked-alt"></i></div>
                 <h3>时空足迹</h3>
@@ -274,13 +327,23 @@
             </div>
             <div class="module-card" onclick="location.href='network.html'">
                 <div class="module-icon"><i class="fas fa-network-wired"></i></div>
-                <h3>人物关系网</h3>
-                <p>革命者、名流、友人——知识网络</p>
+                <h3>实体关系网</h3>
+                <p>机构、人物、地点、作品、事件……————知识网络</p>
             </div>
             <div class="module-card" onclick="location.href='timeline.html'">
                 <div class="module-icon"><i class="fas fa-timeline"></i></div>
                 <h3>大事件年历</h3>
                 <p>竖屏时间轴 · 历史回响</p>
+            </div>
+            <div class="module-card" onclick="location.href='global-network.html'">
+                <div class="module-icon"><i class="fas fa-timeline"></i></div>
+                <h3>全局人物网</h3>
+                <p>革命者、名流、友人</p>
+            </div>
+            <div class="module-card" onclick="location.href='browse.html'">
+                <div class="module-icon"><i class="fas fa-timeline"></i></div>
+                <h3>分类浏览</h3>
+                <p>结构化的书籍内信息查询</p>
             </div>
         </div>
         <footer>数据基于《我在旧中国十三年》及《复始之旅》整理 | 纪念斯诺诞辰</footer>
@@ -305,6 +368,65 @@
         document.getElementById('descRelationCount').textContent = dataCounts.relations;
         document.getElementById('workCount').textContent = dataCounts.works;
         document.getElementById('orgCount').textContent = dataCounts.organizations;
+        document.getElementById('globalSearchBtn').addEventListener('click', () => {
+            const q = document.getElementById('globalSearchInput').value.trim();
+            if (q) window.location.href = `search.html?q=${encodeURIComponent(q)}`;
+        });
+        // 轮播逻辑
+        let currentIndex = 0;
+        const slides = document.querySelectorAll('.carousel-slide');
+        const dots = document.querySelectorAll('.dot');
+        let autoInterval;
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+                if (i !== index) {
+                    slide.querySelectorAll('video').forEach((video) => video.pause());
+                }
+            });
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+            currentIndex = index;
+        }
+
+        function nextSlide() {
+            let newIndex = (currentIndex + 1) % slides.length;
+            showSlide(newIndex);
+        }
+
+        function prevSlide() {
+            let newIndex = (currentIndex - 1 + slides.length) % slides.length;
+            showSlide(newIndex);
+        }
+
+        function startAutoPlay() {
+            autoInterval = setInterval(nextSlide, 7000);
+        }
+
+        function stopAutoPlay() {
+            clearInterval(autoInterval);
+        }
+
+        function resetAutoPlay() {
+            stopAutoPlay();
+            startAutoPlay();
+        }
+
+        // 绑定事件
+        document.querySelector('.carousel-next')?.addEventListener('click', () => { nextSlide(); resetAutoPlay(); });
+        document.querySelector('.carousel-prev')?.addEventListener('click', () => { prevSlide(); resetAutoPlay(); });
+        dots.forEach((dot, idx) => {
+            dot.addEventListener('click', () => { showSlide(idx); resetAutoPlay(); });
+        });
+        document.querySelectorAll('.video-container video').forEach((video) => {
+            video.addEventListener('play', stopAutoPlay);
+            video.addEventListener('pause', resetAutoPlay);
+            video.addEventListener('ended', resetAutoPlay);
+        });
+
+        startAutoPlay();
     </script>
     <script src="js/config.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>

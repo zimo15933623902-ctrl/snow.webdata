@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>全局人物关系网 · 斯诺知识库</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        #globalGraph {
+            width: 100%;
+            height: 85vh;
+            background: #fffaf3;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <button id="backBtn" class="nav-btn" style="background: none; border: none; cursor: pointer;">
+                <i class="fas fa-arrow-left"></i> 返回
+            </button>
+            <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> 首页</a>
+            <a href="map.html" class="nav-btn"><i class="fas fa-map-marked-alt"></i> 时空足迹</a>
+            <a href="network.html" class="nav-btn"><i class="fas fa-network-wired"></i> 实体关系网</a>
+            <a href="timeline.html" class="nav-btn"><i class="fas fa-timeline"></i> 大事件年历</a>
+            <a href="global-network.html" class="nav-btn"><i class="fas fa-globe"></i> 全局人物网</a>
+            <a href="browse.html" class="nav-btn"><i class="fas fa-th-large"></i> 分类浏览</a>
+        </div>
+        <div style="display: flex; align-items: center;">
+            <input type="text" id="globalSearchInput" placeholder="搜索..." style="padding: 6px 12px; border-radius: 40px; border: 1px solid #ddd;">
+            <button id="globalSearchBtn" style="background: #b32d2d; border: none; color: white; padding: 6px 14px; border-radius: 40px; margin-left: 8px; cursor: pointer;">🔍</button>
+        </div>
+    </div>
+    <script>
+        // 返回上一页
+        document.getElementById('backBtn')?.addEventListener('click', () => { window.history.back(); });
+        // 搜索跳转（如果搜索输入框存在）
+        const searchInput = document.getElementById('globalSearchInput');
+        const searchBtn = document.getElementById('globalSearchBtn');
+        if (searchBtn && searchInput) {
+            searchBtn.onclick = () => {
+                const q = searchInput.value.trim();
+                if (q) location.href = `search.html?q=${encodeURIComponent(q)}`;
+            };
+            searchInput.onkeypress = (e) => { if (e.key === 'Enter') searchBtn.click(); };
+        }
+    </script>
+    <div class="page-container">
+        <h2>🌐 全局人物关系网络</h2>
+        <div id="globalGraph"></div>
+        <div class="map-legend" style="justify-content: center;">
+            <span><span class="legend-dot red"></span> 中心人物</span>
+            <span><span class="legend-dot blue"></span> 其他人物</span>
+            <span><i class="legend-line"></i> 直接关系</span>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/global-network.js"></script>
+</body>
+</html>

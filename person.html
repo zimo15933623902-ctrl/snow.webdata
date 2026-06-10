@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>人物详情 · 斯诺知识库</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* 人物详情页专用样式 */
+        .person-detail {
+            max-width: 1200px;
+            margin: 2rem auto;
+            background: #fff;
+            border-radius: 28px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        }
+        .person-header {
+            display: flex;
+            gap: 2rem;
+            border-bottom: 2px solid #b32d2d;
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .person-avatar {
+            width: 140px;
+            height: 140px;
+            background: linear-gradient(145deg, #f0f0f0, #e0e0e0);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #b32d2d;
+            border: 4px solid #b32d2d;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .person-info {
+            flex: 1;
+        }
+        .person-info h1 {
+            font-size: 2.5rem;
+            margin: 0 0 0.5rem;
+            color: #1e1e1e;
+        }
+        .person-meta {
+            color: #666;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .person-meta span {
+            background: #f5f5f5;
+            padding: 0.2rem 0.8rem;
+            border-radius: 20px;
+        }
+        .person-bio {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #444;
+        }
+        .section {
+            margin: 2rem 0;
+        }
+        .section h3 {
+            border-left: 5px solid #b32d2d;
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+        .relation-grid, .event-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+        .relation-card, .event-card {
+            background: #fafafa;
+            border-radius: 16px;
+            padding: 0.8rem 1rem;
+            border: 1px solid #eee;
+            transition: transform 0.2s;
+        }
+        .relation-card:hover, .event-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.05);
+        }
+        .relation-card a, .event-card a {
+            text-decoration: none;
+            color: #b32d2d;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.3rem;
+        }
+        .relation-type {
+            font-size: 0.8rem;
+            color: #888;
+        }
+        .event-date {
+            font-size: 0.75rem;
+            color: #999;
+        }
+        .original-text {
+            background: #fffaf0;
+            border-left: 4px solid #b32d2d;
+            padding: 1.2rem;
+            border-radius: 16px;
+            font-size: 0.9rem;
+            line-height: 1.65;
+            color: #444;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 1rem;
+            color: #b32d2d;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        @media (max-width: 768px) {
+            .person-detail { padding: 1.2rem; }
+            .person-header { flex-direction: column; align-items: center; text-align: center; }
+            .person-avatar { width: 100px; height: 100px; font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <button id="backBtn" class="nav-btn" style="background: none; border: none; cursor: pointer;">
+                <i class="fas fa-arrow-left"></i> 返回
+            </button>
+            <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> 首页</a>
+            <a href="map.html" class="nav-btn"><i class="fas fa-map-marked-alt"></i> 时空足迹</a>
+            <a href="network.html" class="nav-btn"><i class="fas fa-network-wired"></i> 实体关系网</a>
+            <a href="timeline.html" class="nav-btn"><i class="fas fa-timeline"></i> 大事件年历</a>
+            <a href="global-network.html" class="nav-btn"><i class="fas fa-globe"></i> 全局人物网</a>
+            <a href="browse.html" class="nav-btn"><i class="fas fa-th-large"></i> 分类浏览</a>
+        </div>
+        <div style="display: flex; align-items: center;">
+            <input type="text" id="globalSearchInput" placeholder="搜索..." style="padding: 6px 12px; border-radius: 40px; border: 1px solid #ddd;">
+            <button id="globalSearchBtn" style="background: #b32d2d; border: none; color: white; padding: 6px 14px; border-radius: 40px; margin-left: 8px; cursor: pointer;">🔍</button>
+        </div>
+    </div>
+    <script>
+        // 返回上一页
+        document.getElementById('backBtn')?.addEventListener('click', () => { window.history.back(); });
+        // 搜索跳转（如果搜索输入框存在）
+        const searchInput = document.getElementById('globalSearchInput');
+        const searchBtn = document.getElementById('globalSearchBtn');
+        if (searchBtn && searchInput) {
+            searchBtn.onclick = () => {
+                const q = searchInput.value.trim();
+                if (q) location.href = `search.html?q=${encodeURIComponent(q)}`;
+            };
+            searchInput.onkeypress = (e) => { if (e.key === 'Enter') searchBtn.click(); };
+        }
+    </script>
+    <div class="page-container">
+        <div class="person-detail" id="personDetail">
+            <!-- 动态加载内容 -->
+            <p>加载中...</p>
+        </div>
+    </div>
+    <script src="js/data.js"></script>
+    <script src="js/person-detail.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/ai-chat.js"></script>
+</body>
+</html>
