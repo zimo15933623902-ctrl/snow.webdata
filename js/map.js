@@ -94,8 +94,9 @@ function initMap() {
         console.log('✓ 地图底图已加载');
         
         const getColor = (type) => {
-            if (type === "重大事件") return "#b32d2d";
-            if (type === "长期居住") return "#5a7d9a";
+            const t = (type || "").toString();
+            if (t.includes("重大") || t.includes("事件")) return "#b32d2d";
+            if (t.includes("长期") || t.includes("居住")) return "#5a7d9a";
             return "#6b8c6b";
         };
         

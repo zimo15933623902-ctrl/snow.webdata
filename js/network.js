@@ -325,12 +325,15 @@ function initNetwork() {
         currentNodes = uniqueNodes(nodes);
         chart.clear();
         const total = currentNodes.length;
-        const data = [parent, ...currentNodes].map((node, index) => chartNode(node, index === 0, total));
+        const isDense = total > 55;
+        const data = [parent, ...currentNodes].map((node, index) => chartNode(node, index === 0, total, index, isDense));
         const links = currentNodes.map(node => chartLink(parent, node, total));
 
         chart.setOption({
             backgroundColor: 'transparent',
-            animationDurationUpdate: 450,
+            animation: false,
+            animationDuration: 0,
+            animationDurationUpdate: 0,
             tooltip: {
                 trigger: 'item',
                 confine: true,
@@ -345,32 +348,32 @@ function initNetwork() {
             },
             series: [{
                 type: 'graph',
-                layout: 'force',
+                layout: isDense ? 'none' : 'force',
                 roam: true,
                 draggable: true,
                 focusNodeAdjacency: true,
                 scaleLimit: {
-                    min: 0.35,
+                    min: 0.45,
                     max: 4
                 },
                 labelLayout: {
-                    hideOverlap: total > 55
+                    hideOverlap: total > 28
                 },
                 edgeSymbol: ['none', 'arrow'],
                 edgeSymbolSize: [0, 7],
                 data,
                 links,
-                force: {
+                force: isDense ? undefined : {
                     initLayout: 'circular',
-                    repulsion: total > 80 ? 95 : total > 45 ? 140 : 250,
-                    gravity: total > 80 ? 0.025 : 0.04,
-                    edgeLength: total > 80 ? [58, 118] : total > 45 ? [74, 150] : [100, 210],
+                    repulsion: total > 35 ? 120 : 230,
+                    gravity: 0.04,
+                    edgeLength: total > 35 ? [72, 135] : [96, 180],
                     friction: 0.34,
-                    layoutAnimation: true
+                    layoutAnimation: false
                 },
                 lineStyle: {
                     color: 'rgba(179,45,45,0.26)',
-                    width: 1.5,
+                    width: total > 90 ? 0.8 : 1.2,
                     type: 'dashed',
                     curveness: 0.05
                 },
@@ -398,10 +401,12 @@ function initNetwork() {
         if (backButton) backButton.disabled = historyStack.length === 0;
     }
 
-    function chartNode(node, isCenter, total) {
+    function chartNode(node, isCenter, total, index, isDense) {
         const childTotal = childCount(node);
         const isActive = activeNodeId === node.id || isCenter;
-        const size = isCenter ? 86 : node.type === 'category' ? 62 : symbolSize(total, childTotal);
+        const size = isCenter ? (isDense ? 48 : 76) : node.type === 'category' ? 58 : symbolSize(total, childTotal);
+        const position = isDense ? radialPosition(index, total) : null;
+        const showNodeLabel = isCenter || total <= 55 || (total <= 95 && childTotal > 0);
         return {
             id: node.id,
             name: node.title,
@@ -410,23 +415,23 @@ function initNetwork() {
             symbol: node.image ? `image://${node.image}` : 'circle',
             symbolSize: size,
             draggable: true,
-            fixed: isCenter,
-            x: isCenter ? graph.clientWidth / 2 : undefined,
-            y: isCenter ? graph.clientHeight / 2 : undefined,
+            fixed: isDense || isCenter,
+            x: position?.x ?? (isCenter ? graph.clientWidth / 2 : undefined),
+            y: position?.y ?? (isCenter ? graph.clientHeight / 2 : undefined),
             itemStyle: {
                 color: node.image ? '#fff' : nodeFill(node.type, isActive),
                 borderColor: isActive ? '#b32d2d' : 'rgba(179,45,45,0.18)',
-                borderWidth: isCenter ? 5 : 1.5,
-                shadowBlur: isCenter ? 28 : 18,
+                borderWidth: isCenter ? 4 : 1.2,
+                shadowBlur: isCenter ? 16 : 9,
                 shadowColor: 'rgba(68,42,28,0.16)'
             },
             label: {
-                show: true,
+                show: showNodeLabel,
                 position: isCenter ? 'bottom' : 'right',
-                distance: isCenter ? 8 : 7,
+                distance: isCenter ? 7 : 4,
                 formatter: labelFormatter(node, isCenter, total),
                 color: isCenter ? '#fff' : '#1e1e1e',
-                fontSize: isCenter ? 13 : total > 70 ? 10 : total > 35 ? 11 : 12,
+                fontSize: isCenter ? 12 : total > 90 ? 8 : total > 55 ? 9 : total > 35 ? 10 : 11,
                 fontWeight: isCenter ? 800 : 700,
                 backgroundColor: isCenter ? '#b32d2d' : 'rgba(255,255,255,0.88)',
                 borderColor: 'rgba(234,223,212,0.95)',
@@ -435,6 +440,13 @@ function initNetwork() {
                 padding: isCenter ? [6, 12] : [4, 8],
                 shadowBlur: 12,
                 shadowColor: 'rgba(68,42,28,0.08)'
+            },
+            emphasis: {
+                label: {
+                    show: true,
+                    formatter: node.title,
+                    fontSize: total > 90 ? 9 : 10
+                }
             }
         };
     }
@@ -448,9 +460,9 @@ function initNetwork() {
             fullLabel,
             lineStyle: {
                 color: 'rgba(179,45,45,0.25)',
-                width: total > 60 ? 1.1 : 1.6,
+                width: total > 90 ? 0.7 : total > 55 ? 0.9 : 1.4,
                 type: 'dashed',
-                curveness: total > 50 ? 0.03 : 0.08
+                curveness: total > 55 ? 0 : 0.08
             },
             label: {
                 show: showLabel,
@@ -468,10 +480,49 @@ function initNetwork() {
     }
 
     function symbolSize(total, childTotal) {
-        if (total > 100) return 24 + Math.min(childTotal, 8) * 1.5;
-        if (total > 70) return 30 + Math.min(childTotal, 8) * 1.6;
-        if (total > 45) return 38 + Math.min(childTotal, 8) * 1.8;
-        return 50 + Math.min(childTotal, 8) * 2;
+        if (total > 150) return 13 + Math.min(childTotal, 8) * 0.8;
+        if (total > 95) return 16 + Math.min(childTotal, 8);
+        if (total > 55) return 19 + Math.min(childTotal, 8) * 1.2;
+        if (total > 35) return 30 + Math.min(childTotal, 8) * 1.4;
+        return 45 + Math.min(childTotal, 8) * 1.8;
+    }
+
+    function radialPosition(index, total) {
+        const width = Math.max(graph.clientWidth, 720);
+        const height = Math.max(graph.clientHeight, 560);
+        const centerX = width / 2;
+        const centerY = height / 2;
+        if (index === 0) return { x: centerX, y: centerY };
+
+        const childIndex = index - 1;
+        const ringCount = total > 150 ? 5 : total > 95 ? 4 : total > 55 ? 3 : 2;
+        const weights = Array.from({ length: ringCount }, (_, ring) => ring + 1);
+        const weightSum = weights.reduce((sum, weight) => sum + weight, 0);
+        const capacities = weights.map(weight => Math.max(1, Math.floor(total * weight / weightSum)));
+        while (capacities.reduce((sum, capacity) => sum + capacity, 0) < total) {
+            capacities[capacities.length - 1] += 1;
+        }
+
+        let offset = childIndex;
+        let ring = 0;
+        while (ring < capacities.length - 1 && offset >= capacities[ring]) {
+            offset -= capacities[ring];
+            ring += 1;
+        }
+        const countInRing = capacities[ring];
+        const maxRadiusX = Math.min(width * 0.42, 430);
+        const maxRadiusY = Math.min(height * 0.40, 310);
+        const minRadiusX = total > 150 ? 80 : 96;
+        const minRadiusY = total > 150 ? 58 : 72;
+        const progress = ringCount === 1 ? 1 : ring / (ringCount - 1);
+        const radiusX = minRadiusX + (maxRadiusX - minRadiusX) * progress;
+        const radiusY = minRadiusY + (maxRadiusY - minRadiusY) * progress;
+        const angle = (-Math.PI / 2) + (offset / countInRing) * Math.PI * 2 + (ring % 2 ? Math.PI / countInRing : 0);
+
+        return {
+            x: centerX + Math.cos(angle) * radiusX,
+            y: centerY + Math.sin(angle) * radiusY
+        };
     }
 
     function nodeFill(type, isActive) {
@@ -489,8 +540,9 @@ function initNetwork() {
 
     function labelFormatter(node, isCenter, total) {
         if (isCenter) return node.title;
-        if (total > 80) return shortLabel(node.title, 8);
-        if (total > 45) return shortLabel(node.title, 12);
+        if (total > 95) return shortLabel(node.title, 6);
+        if (total > 55) return shortLabel(node.title, 8);
+        if (total > 35) return shortLabel(node.title, 10);
         return node.title;
     }
 
