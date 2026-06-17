@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>时空足迹 · 斯诺在中国</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .leaflet-container { background: #1e1e1e; }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background: #2c2c2c;
+            color: #e0e0e0;
+            border-radius: 8px;
+            border-left: 4px solid #b32d2d;
+        }
+        .loc-jump { background: #b32d2d; color: white; border: none; }
+        .map-search-box {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            align-items: center;
+            background: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 40px;
+            border: 1px solid #ddd;
+            max-width: 400px;
+        }
+        .map-search-box input {
+            border: none;
+            flex: 1;
+            padding: 0.4rem 0;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        .map-search-box button {
+            background: #b32d2d;
+            border: none;
+            color: white;
+            padding: 0.3rem 1rem;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <button id="backBtn" class="nav-btn" style="background: none; border: none; cursor: pointer;">
+                <i class="fas fa-arrow-left"></i> 返回
+            </button>
+            <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> 首页</a>
+            <a href="map.html" class="nav-btn active"><i class="fas fa-map-marked-alt"></i> 时空足迹</a>
+            <a href="timeline.html" class="nav-btn"><i class="fas fa-timeline"></i> 大事件年历</a>
+            <div class="nav-menu">
+                <button class="nav-btn" type="button"><i class="fas fa-users"></i> 关系探索 <i class="fas fa-chevron-down nav-chevron"></i></button>
+                <div class="nav-submenu">
+                    <a href="network.html" class="nav-subitem"><i class="fas fa-project-diagram"></i> 全局关系</a>
+                    <a href="global-network.html" class="nav-subitem"><i class="fas fa-globe"></i> 人物关系</a>
+                </div>
+            </div>
+            <a href="browse.html" class="nav-btn"><i class="fas fa-th-large"></i> 分类浏览</a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <input type="text" id="globalSearchInput" placeholder="搜索人物、事件、地点..." style="padding: 6px 12px; border-radius: 40px; border: 1px solid #ddd; min-width: 160px;">
+            <button id="globalSearchBtn" style="background: #b32d2d; border: none; color: white; padding: 6px 14px; border-radius: 40px; cursor: pointer;">🔍</button>
+        </div>
+    </div>
+    <script>
+        document.getElementById('backBtn')?.addEventListener('click', () => { window.history.back(); });
+        const searchInput = document.getElementById('globalSearchInput');
+        const searchBtn = document.getElementById('globalSearchBtn');
+        if (searchBtn && searchInput) {
+            searchBtn.onclick = () => {
+                const q = searchInput.value.trim();
+                if (q) location.href = `search.html?q=${encodeURIComponent(q)}`;
+            };
+            searchInput.onkeypress = (e) => { if (e.key === 'Enter') searchBtn.click(); };
+        }
+    </script>
+    <div class="page-container">
+        <h2>斯诺的时空足迹 · 历史现场</h2>
+        <div class="map-search-box">
+            <i class="fas fa-search" style="color:#b32d2d;"></i>
+            <input type="text" id="mapLocationSearch" placeholder="输入地点名称，例如“保安”、“上海”...">
+            <button id="mapSearchBtn">定位</button>
+        </div>
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="event-sidebar">
+                <h3>重要地点 & 关联事件（点击跳转时间轴）</h3>
+                <div id="dynamicEventsList">加载地图中...</div>
+            </div>
+        </div>
+        <div class="map-legend">
+            <span><span class="legend-dot red"></span> 重大事件地</span>
+            <span><span class="legend-dot blue"></span> 长期居住地</span>
+            <span><span class="legend-dot green"></span> 途经/旅行地</span>
+        </div>
+        <footer>点击地图上的标记点可查看详情，悬浮显示事件摘要 | 侧边栏事件可跳转时间轴</footer>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script>
+        window.addEventListener('load', function() {
+            if (typeof L === 'undefined') {
+                document.getElementById('dynamicEventsList').innerHTML = '<div style="color:red;">❌ 地图库加载失败，请检查网络后刷新页面。</div>';
+            }
+        });
+    </script>
+    <script src="js/data.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/map.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+    <script src="js/knowledge-base.js"></script>
+    <script src="js/ai-chat.js"></script>
+    <script>
+        // 地图页面独立的地点检索
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('mapLocationSearch');
+            const searchBtn = document.getElementById('mapSearchBtn');
+            if (searchBtn && searchInput) {
+                searchBtn.addEventListener('click', function() {
+                    const keyword = searchInput.value.trim();
+                    if (!keyword) return;
+                    // 在 locations 中查找匹配项
+                    const matched = locations.filter(loc => loc.name.includes(keyword) || loc.desc.includes(keyword));
+                    if (matched.length > 0) {
+                        const target = matched[0];
+                        // 地图定位（mapInstance 在 map.js 中定义）
+                        if (window.mapInstance) {
+                            window.mapInstance.setView([target.lat, target.lng], 8);
+                            // 触发高亮（查找对应的 marker）
+                            const marker = window.markers?.find((m, idx) => locations[idx].name === target.name);
+                            if (marker) marker.openPopup();
+                        } else {
+                            alert('地图尚未加载完成，请稍后重试。');
+                        }
+                    } else {
+                        alert('未找到匹配的地点，请尝试其他关键词。');
+                    }
+                });
+                searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') searchBtn.click();
+                });
+            }
+        });
+    </script>
+</body>
+</html>

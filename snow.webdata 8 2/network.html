@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全局关系 · 斯诺知识网络</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        :root {
+            --kg-red: #b32d2d;
+            --kg-deep-red: #8f2525;
+            --kg-brown: #7d6f63;
+            --kg-paper: #fffaf3;
+            --kg-ink: #1e1e1e;
+            --kg-line: #eadfd4;
+        }
+        body {
+            background:
+                radial-gradient(circle at top left, rgba(179,45,45,0.1), transparent 30rem),
+                linear-gradient(180deg, #fffaf3 0%, #f8f8f8 58%);
+            color: var(--kg-ink);
+        }
+        .navbar {
+            background: #fff;
+            border-bottom: 3px solid var(--kg-red);
+        }
+        .network-page {
+            max-width: none;
+            margin: 0;
+            padding: 1.25rem 1.5rem;
+        }
+        .network-shell {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 390px;
+            gap: 1rem;
+            height: calc(100vh - 124px);
+            min-height: 690px;
+        }
+        .graph-stage {
+            position: relative;
+            overflow: hidden;
+            min-height: 0;
+            height: 100%;
+            border-radius: 18px;
+            border: 1px solid var(--kg-line);
+            background:
+                radial-gradient(circle at 24% 74%, rgba(179,45,45,0.05), transparent 16rem),
+                radial-gradient(circle at 80% 22%, rgba(179,45,45,0.04), transparent 18rem),
+                linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,250,243,0.92));
+            box-shadow: 0 18px 45px rgba(68,42,28,0.08);
+        }
+        .graph-stage::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(rgba(179,45,45,0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(179,45,45,0.035) 1px, transparent 1px);
+            background-size: 44px 44px;
+            mask-image: linear-gradient(180deg, #000 0%, transparent 78%);
+            pointer-events: none;
+        }
+        .graph-svg {
+            position: absolute;
+            inset: 28px 28px 58px;
+            width: calc(100% - 56px);
+            height: calc(100% - 86px);
+            z-index: 1;
+            pointer-events: none;
+            overflow: visible;
+        }
+        .graph-canvas {
+            position: absolute;
+            inset: 28px 28px 58px;
+            z-index: 2;
+            overflow: visible;
+        }
+        .entity-graph {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .entity-fallback {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+            align-content: start;
+            gap: 0.85rem;
+            padding: 4.8rem 1.4rem 4rem;
+            overflow: auto;
+        }
+        .entity-fallback .graph-node {
+            position: static;
+            width: auto;
+            transform: none;
+            animation: none;
+        }
+        .entity-fallback .node-avatar {
+            width: 54px;
+            height: 54px;
+        }
+        .graph-node {
+            position: absolute;
+            width: 132px;
+            transform: translate(-50%, -50%);
+            padding: 0;
+            border: 0;
+            appearance: none;
+            -webkit-appearance: none;
+            background: transparent;
+            cursor: pointer;
+            color: var(--kg-ink);
+            font: inherit;
+            animation: popIn 0.28s ease both;
+            overflow: visible;
+        }
+        .graph-node:focus-visible {
+            outline: none;
+        }
+        .graph-node:focus-visible .node-avatar {
+            box-shadow:
+                0 0 0 9px rgba(179,45,45,0.1),
+                0 18px 34px rgba(68,42,28,0.2),
+                inset 0 0 0 1px rgba(255,255,255,0.92);
+        }
+        .node-avatar {
+            width: 76px;
+            height: 76px;
+            margin: 0 auto;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            color: var(--kg-red);
+            font-size: 1.35rem;
+            font-weight: 800;
+            border: 4px solid rgba(255,255,255,0.95);
+            outline: 0;
+            box-shadow:
+                0 16px 34px rgba(68,42,28,0.16),
+                0 0 0 1px rgba(179,45,45,0.12),
+                inset 0 0 0 1px rgba(255,255,255,0.9);
+            background:
+                radial-gradient(circle at 35% 28%, #fff 0%, #fff 44%, #fff4ef 100%);
+            overflow: hidden;
+            transition: transform 0.2s ease, outline-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .node-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: sepia(8%) contrast(0.98);
+        }
+        .graph-node.center {
+            width: 172px;
+        }
+        .graph-node.center .node-avatar {
+            width: 118px;
+            height: 118px;
+            box-shadow:
+                0 20px 42px rgba(68,42,28,0.2),
+                0 0 0 5px rgba(179,45,45,0.16),
+                inset 0 0 0 1px rgba(255,255,255,0.92);
+        }
+        .graph-node.branch .node-avatar {
+            width: 88px;
+            height: 88px;
+            background: linear-gradient(180deg, #fff, #fff7ef);
+        }
+        .graph-node.leaf {
+            width: 150px;
+        }
+        .graph-node.leaf .node-avatar {
+            width: 66px;
+            height: 66px;
+        }
+        .graph-node.active .node-avatar {
+            box-shadow:
+                0 0 0 9px rgba(179,45,45,0.08),
+                0 18px 34px rgba(68,42,28,0.2),
+                inset 0 0 0 1px rgba(255,255,255,0.92);
+            transform: translateY(-2px);
+        }
+        .node-label {
+            display: inline-block;
+            margin-top: 0.34rem;
+            max-width: 132px;
+            padding: 0.34rem 0.64rem;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid var(--kg-line);
+            color: #3a3a3a;
+            font-size: 0.86rem;
+            font-weight: 700;
+            line-height: 1.2;
+            box-shadow: 0 8px 18px rgba(68,42,28,0.08);
+            white-space: normal;
+        }
+        .graph-node.center .node-label,
+        .graph-node.active .node-label {
+            background: var(--kg-red);
+            color: #fff;
+            border-color: var(--kg-red);
+        }
+        .stage-hint {
+            position: absolute;
+            left: 1.2rem;
+            top: 1.1rem;
+            z-index: 3;
+            display: flex;
+            gap: 0.65rem;
+            align-items: center;
+            max-width: 560px;
+            padding: 0.7rem 0.9rem;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.86);
+            color: #666;
+            font-size: 0.92rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 20px rgba(68,42,28,0.08);
+        }
+        .stage-hint strong {
+            color: var(--kg-red);
+        }
+        .graph-actions {
+            position: absolute;
+            right: 1.2rem;
+            top: 1.1rem;
+            z-index: 5;
+            display: flex;
+            gap: 0.55rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .graph-action {
+            border: 1px solid rgba(179,45,45,0.18);
+            border-radius: 999px;
+            background: rgba(255,255,255,0.9);
+            color: var(--kg-red);
+            cursor: pointer;
+            font: inherit;
+            font-weight: 700;
+            padding: 0.58rem 0.82rem;
+            box-shadow: 0 8px 20px rgba(68,42,28,0.08);
+            backdrop-filter: blur(10px);
+            transition: transform 0.18s ease, opacity 0.18s ease;
+        }
+        .graph-action:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+        .graph-action:disabled {
+            cursor: not-allowed;
+            opacity: 0.42;
+        }
+        .graph-legend {
+            position: absolute;
+            left: 1.2rem;
+            bottom: 1.1rem;
+            z-index: 4;
+            display: flex;
+            gap: 1.2rem;
+            flex-wrap: wrap;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .legend-dot {
+            display: inline-block;
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            margin-right: 0.35rem;
+            vertical-align: -1px;
+        }
+        .legend-dot.center { background: var(--kg-red); }
+        .legend-dot.node { background: #fff; border: 2px solid rgba(179,45,45,0.35); }
+        .legend-line {
+            display: inline-block;
+            width: 34px;
+            border-top: 3px dashed rgba(179,45,45,0.26);
+            margin-right: 0.35rem;
+            vertical-align: middle;
+        }
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            height: 100%;
+            background: rgba(255,255,255,0.94);
+            border: 1px solid var(--kg-line);
+            border-radius: 18px;
+            box-shadow: 0 16px 35px rgba(68,42,28,0.08);
+            overflow: hidden;
+        }
+        .panel-search {
+            padding: 1rem 1rem 0.8rem;
+            background: rgba(255,255,255,0.72);
+        }
+        .panel-search label {
+            position: relative;
+            display: block;
+        }
+        .panel-search i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9b907f;
+        }
+        .panel-search input {
+            width: 100%;
+            padding: 0.78rem 1rem 0.78rem 2.45rem;
+            border: 1px solid var(--kg-line);
+            border-radius: 12px;
+            background: #fff;
+            font: inherit;
+            box-shadow: 0 5px 14px rgba(68,42,28,0.06);
+            outline: none;
+        }
+        .panel-search input:focus {
+            border-color: rgba(179,45,45,0.45);
+            box-shadow: 0 0 0 4px rgba(179,45,45,0.09);
+        }
+        .panel-title {
+            text-align: center;
+            padding: 1rem 1rem 0.9rem;
+            border-bottom: 1px solid var(--kg-line);
+        }
+        .panel-title .diamonds {
+            color: var(--kg-red);
+            letter-spacing: 0.12em;
+            font-size: 0.9rem;
+        }
+        .panel-title h2 {
+            margin: 0.25rem 0 0;
+            font-size: 1.5rem;
+            color: var(--kg-ink);
+        }
+        .panel-subtitle {
+            margin: 0.3rem auto 0;
+            color: #777;
+            font-size: 0.86rem;
+        }
+        .node-list {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 0.9rem;
+        }
+        .node-card {
+            width: 100%;
+            display: grid;
+            grid-template-columns: 50px minmax(0, 1fr) auto;
+            gap: 0.8rem;
+            align-items: center;
+            margin-bottom: 0.78rem;
+            padding: 0.72rem;
+            border: 1px solid var(--kg-line);
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 7px 15px rgba(68,42,28,0.06);
+            cursor: pointer;
+            text-align: left;
+            font: inherit;
+            color: inherit;
+            transition: transform 0.18s ease, border-color 0.18s ease;
+        }
+        .node-card:hover, .node-card.active {
+            transform: translateY(-2px);
+            border-color: rgba(179,45,45,0.4);
+            background: #fffaf8;
+        }
+        .card-icon {
+            width: 44px;
+            height: 44px;
+            border: 1px solid rgba(179,45,45,0.14);
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            color: var(--kg-red);
+            background: #fff7f3;
+            overflow: hidden;
+            font-weight: 800;
+        }
+        .card-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .card-title {
+            font-weight: 800;
+            font-size: 1.04rem;
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .card-meta {
+            margin-top: 0.2rem;
+            color: #999;
+            font-size: 0.76rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+        .card-index {
+            min-width: 1.45rem;
+            height: 1.45rem;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: rgba(179,45,45,0.09);
+            color: var(--kg-red);
+            box-shadow: none;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+        .node-detail {
+            margin: 0 0.9rem 0.9rem;
+            padding: 1rem;
+            border-radius: 14px;
+            background: #fffaf8;
+            border: 1px solid var(--kg-line);
+            color: #555;
+            line-height: 1.65;
+            max-height: 230px;
+            overflow: auto;
+        }
+        .node-detail h3 {
+            margin: 0 0 0.45rem;
+            color: var(--kg-red);
+        }
+        @keyframes popIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.82); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+        @media (max-width: 1180px) {
+            .network-shell {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+            .graph-stage,
+            .side-panel {
+                min-height: 640px;
+                height: 640px;
+            }
+        }
+        @media (max-width: 720px) {
+            .network-page {
+                padding: 0.75rem;
+            }
+            .graph-stage {
+                min-height: 580px;
+            }
+            .graph-canvas {
+                inset: 54px 18px 56px;
+            }
+            .graph-svg {
+                inset: 54px 18px 56px;
+            }
+            .stage-hint {
+                position: absolute;
+                inset: 0.75rem 0.75rem auto;
+                max-width: none;
+                border-radius: 16px;
+            }
+            .graph-actions {
+                top: 5.2rem;
+                right: 0.75rem;
+                left: 0.75rem;
+                justify-content: flex-start;
+            }
+            .graph-node.center .node-avatar {
+                width: 86px;
+                height: 86px;
+            }
+            .graph-node.branch .node-avatar {
+                width: 66px;
+                height: 66px;
+            }
+            .node-label {
+                max-width: 110px;
+                font-size: 0.78rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <button id="backBtn" class="nav-btn" style="background: none; border: none; cursor: pointer;">
+                <i class="fas fa-arrow-left"></i> 返回
+            </button>
+            <a href="index.html" class="nav-btn"><i class="fas fa-home"></i> 首页</a>
+            <a href="map.html" class="nav-btn"><i class="fas fa-map-marked-alt"></i> 时空足迹</a>
+            <a href="timeline.html" class="nav-btn"><i class="fas fa-timeline"></i> 大事件年历</a>
+            <div class="nav-menu active">
+                <button class="nav-btn" type="button"><i class="fas fa-users"></i> 关系探索 <i class="fas fa-chevron-down nav-chevron"></i></button>
+                <div class="nav-submenu">
+                    <a href="network.html" class="nav-subitem active"><i class="fas fa-project-diagram"></i> 全局关系</a>
+                    <a href="global-network.html" class="nav-subitem"><i class="fas fa-globe"></i> 人物关系</a>
+                </div>
+            </div>
+            <a href="browse.html" class="nav-btn"><i class="fas fa-th-large"></i> 分类浏览</a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+            <input type="text" id="globalSearchInput" placeholder="搜索人物、事件、地点..." style="padding: 6px 12px; border-radius: 40px; border: 1px solid #ddd; min-width: 160px;">
+            <button id="globalSearchBtn" style="background: #b32d2d; border: none; color: white; padding: 6px 14px; border-radius: 40px; cursor: pointer;">🔍</button>
+        </div>
+    </div>
+    <script>
+        document.getElementById('backBtn')?.addEventListener('click', () => { window.history.back(); });
+        const searchInput = document.getElementById('globalSearchInput');
+        const searchBtn = document.getElementById('globalSearchBtn');
+        if (searchBtn && searchInput) {
+            searchBtn.onclick = () => {
+                const q = searchInput.value.trim();
+                if (q) location.href = `search.html?q=${encodeURIComponent(q)}`;
+            };
+            searchInput.onkeypress = (e) => { if (e.key === 'Enter') searchBtn.click(); };
+        }
+    </script>
+    <main class="page-container network-page">
+        <section class="network-shell" aria-label="斯诺全局关系">
+            <div class="graph-stage">
+                <div class="stage-hint"><i class="fas fa-hand-pointer"></i><span><strong>点击节点</strong>逐层展开：斯诺 → 知识节点 → 具体人物/地点/事件 → 相关线索</span></div>
+                <div class="graph-actions" aria-label="图谱导航">
+                    <button class="graph-action" id="graphBack" type="button" disabled><i class="fas fa-arrow-left"></i> 返回上一层</button>
+                    <button class="graph-action" id="graphHome" type="button"><i class="fas fa-home"></i> 回到起点</button>
+                </div>
+                <svg class="graph-svg" id="graphLines" aria-hidden="true"></svg>
+                <div class="graph-canvas" id="logicGraph" aria-live="polite"></div>
+                <div class="graph-legend">
+                    <span><i class="legend-dot center"></i>中心人物</span>
+                    <span><i class="legend-dot node"></i>知识节点</span>
+                    <span><i class="legend-line"></i>关系连线</span>
+                </div>
+            </div>
+            <aside class="side-panel">
+                <div class="panel-search">
+                    <label>
+                        <i class="fas fa-search"></i>
+                        <input id="graphSearch" type="search" placeholder="搜索人物、事件、地点...">
+                    </label>
+                </div>
+                <div class="panel-title">
+                    <div class="diamonds">◆◆◆</div>
+                    <h2 id="panelTitle">知识体系</h2>
+                    <p class="panel-subtitle" id="panelSubtitle">从右侧列表或画布节点开始探索</p>
+                </div>
+                <div class="node-list" id="nodeList"></div>
+                <div class="node-detail" id="nodeDetail">
+                    <h3>探索提示</h3>
+                    <p>点击“人物、地点、历史事件”等知识节点，图谱会只展开下一层逻辑；再点击具体节点，可查看关联说明与原文摘录。</p>
+                </div>
+            </aside>
+        </section>
+    </main>
+    <script src="js/data.js"></script>
+    <script src="js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <script src="js/network.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+    <!-- <script src="js/book-data.js"></script>   书籍全文数据 -->
+    <script src="js/knowledge-base.js"></script>
+    <script src="js/ai-chat.js"></script>
+</body>
+</html>

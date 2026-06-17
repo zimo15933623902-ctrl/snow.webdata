@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>斯诺在中国 · 名人数据库</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        :root {
+            --snow-red: #b32d2d;
+            --snow-blue: #263968;
+            --snow-gold: #d4b063;
+        }
+        body {
+            background: linear-gradient(180deg, #fbf7ef 0%, #f7f7f7 58%);
+        }
+        .home-shell {
+            max-width: 1480px;
+        }
+        .hero {
+            min-height: clamp(540px, 72vh, 780px);
+            position: relative;
+            overflow: hidden;
+            border: 0;
+            border-radius: 34px;
+            background:
+                linear-gradient(115deg, rgba(19,27,46,0.94) 0%, rgba(38,57,104,0.84) 54%, rgba(92,65,42,0.54) 100%),
+                radial-gradient(circle at 52% 18%, rgba(212,176,99,0.22), transparent 22rem);
+            box-shadow: 0 28px 80px rgba(62,34,24,0.18);
+            isolation: isolate;
+        }
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            background:
+                linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+            background-size: 52px 52px;
+            opacity: 0.36;
+        }
+        .hero-content {
+            min-height: inherit;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, 430px);
+            gap: clamp(2rem, 5vw, 5rem);
+            align-items: center;
+            padding: clamp(2rem, 6vw, 5.5rem);
+        }
+        .portrait {
+            order: 2;
+            justify-self: center;
+            width: min(390px, 34vw);
+            aspect-ratio: 0.76;
+            position: relative;
+            flex: none;
+        }
+        .portrait::before {
+            content: "";
+            position: absolute;
+            inset: 8% -8% -6%;
+            border-radius: 34px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.18);
+            box-shadow: 0 28px 70px rgba(0,0,0,0.28);
+            backdrop-filter: blur(14px);
+        }
+        .portrait img {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            border-radius: 0;
+            object-fit: contain;
+            object-position: center;
+            background: transparent;
+            box-shadow: none;
+            filter: drop-shadow(0 24px 34px rgba(0,0,0,0.36));
+        }
+        .hero-text {
+            color: #fff;
+            max-width: 760px;
+            padding-bottom: 10.5rem;
+        }
+        .hero-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            margin-bottom: 1.2rem;
+            padding: 0.55rem 0.9rem;
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 999px;
+            background: rgba(255,255,255,0.12);
+            color: #ffe7c0;
+            font-size: 0.9rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            backdrop-filter: blur(10px);
+        }
+        .hero-text h1 {
+            color: #fff;
+            font-size: clamp(3rem, 7vw, 6.8rem);
+            line-height: 0.98;
+            letter-spacing: 0.04em;
+            text-shadow: 0 8px 28px rgba(0,0,0,0.28);
+        }
+        .hero-text h1 span {
+            display: block;
+        }
+        .hero-text p {
+            color: rgba(255,255,255,0.84);
+            font-size: clamp(1.05rem, 2vw, 1.45rem);
+            margin: 1.1rem 0 1rem;
+        }
+        .quote {
+            color: #ffe7c0;
+            border-left: 4px solid var(--snow-gold);
+            font-size: clamp(1rem, 1.8vw, 1.28rem);
+            font-weight: 700;
+        }
+        .hero-actions {
+            display: flex;
+            gap: 0.85rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+            position: relative;
+            z-index: 2;
+        }
+        .hero-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-radius: 999px;
+            padding: 0.85rem 1.25rem;
+            text-decoration: none;
+            font-weight: 800;
+            transition: transform 0.2s ease;
+        }
+        .hero-btn.primary {
+            background: var(--snow-red);
+            color: #fff;
+            box-shadow: 0 14px 34px rgba(179,45,45,0.34);
+        }
+        .hero-btn.secondary {
+            background: rgba(255,255,255,0.14);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.24);
+            backdrop-filter: blur(10px);
+        }
+        .hero-btn:hover {
+            transform: translateY(-2px);
+        }
+        .hero-meta {
+            position: absolute;
+            left: clamp(2rem, 6vw, 5.5rem);
+            bottom: clamp(1.2rem, 4vw, 3rem);
+            display: grid;
+            grid-template-columns: repeat(4, minmax(86px, 1fr));
+            gap: 0.75rem;
+            width: min(650px, calc(100% - 2.4rem));
+        }
+        .hero-stat {
+            padding: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 18px;
+            background: rgba(255,255,255,0.13);
+            color: #fff;
+            backdrop-filter: blur(12px);
+        }
+        .hero-stat strong {
+            display: block;
+            color: #ffe7c0;
+            font-size: 1.7rem;
+            line-height: 1;
+        }
+        .hero-stat span {
+            display: block;
+            margin-top: 0.35rem;
+            color: rgba(255,255,255,0.82);
+            font-size: 0.86rem;
+        }
+        .db-info {
+            margin-top: 2rem;
+            border-left-width: 6px;
+            background: rgba(255,255,255,0.92);
+            box-shadow: 0 18px 45px rgba(68,42,28,0.08);
+        }
+        .red-star-badge {
+            display: inline-block;
+            background: #b32d2d;
+            color: #fff;
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+        }
+        @media (max-width: 900px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .portrait {
+                order: -1;
+                width: min(300px, 76vw);
+            }
+            .hero-actions {
+                justify-content: center;
+            }
+            .hero-text {
+                padding-bottom: 0;
+            }
+            .hero-meta {
+                position: relative;
+                left: auto;
+                bottom: auto;
+                margin: 0 auto 0;
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 640px) {
+            .hero {
+                border-radius: 24px;
+            }
+            .hero-content {
+                padding: 1.6rem;
+            }
+            .hero-meta {
+                grid-template-columns: 1fr;
+            }
+            .hero-text h1 {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <button id="backBtn" class="nav-btn" style="background: none; border: none; cursor: pointer;">
+                <i class="fas fa-arrow-left"></i> 返回
+            </button>
+            <a href="index.html" class="nav-btn active"><i class="fas fa-home"></i> 首页</a>
+            <a href="map.html" class="nav-btn"><i class="fas fa-map-marked-alt"></i> 时空足迹</a>
+            <a href="timeline.html" class="nav-btn"><i class="fas fa-timeline"></i> 大事件年历</a>
+            <div class="nav-menu">
+                <button class="nav-btn" type="button"><i class="fas fa-users"></i> 关系探索 <i class="fas fa-chevron-down nav-chevron"></i></button>
+                <div class="nav-submenu">
+                    <a href="network.html" class="nav-subitem"><i class="fas fa-project-diagram"></i> 全局关系</a>
+                    <a href="global-network.html" class="nav-subitem"><i class="fas fa-globe"></i> 人物关系</a>
+                </div>
+            </div>
+            <a href="browse.html" class="nav-btn"><i class="fas fa-th-large"></i> 分类浏览</a>
+        </div>
+        <div style="display: flex; align-items: center;">
+            <input type="text" id="globalSearchInput" placeholder="搜索人物、事件、地点..." style="padding: 6px 12px; border-radius: 40px; border: 1px solid #ddd;">
+            <button id="globalSearchBtn" style="background: #b32d2d; border: none; color: white; padding: 6px 14px; border-radius: 40px; margin-left: 8px; cursor: pointer;">🔍</button>
+        </div>
+    </div>
+    <script>
+        document.getElementById('backBtn')?.addEventListener('click', () => { window.history.back(); });
+        const searchInput = document.getElementById('globalSearchInput');
+        const searchBtn = document.getElementById('globalSearchBtn');
+        if (searchBtn && searchInput) {
+            searchBtn.onclick = () => {
+                const q = searchInput.value.trim();
+                if (q) location.href = `search.html?q=${encodeURIComponent(q)}`;
+            };
+            searchInput.onkeypress = (e) => { if (e.key === 'Enter') searchBtn.click(); };
+        }
+    </script>
+    <div class="page-container home-shell">
+    <!-- 轮播容器 -->
+    <div class="hero-carousel">
+        <div class="carousel-slides">
+            <!-- 第一页：原有 hero 内容 -->
+            <div class="carousel-slide active">
+                <div class="hero-content">
+                    <div class="portrait">
+                        <img src="images/edgar-snow-bg.jpg" alt="埃德加·斯诺肖像">
+                    </div>
+                    <div class="hero-text">
+                        <div class="hero-kicker"><i class="fas fa-camera-retro"></i> EDGAR SNOW IN CHINA <span class="red-star-badge">★ 青少年必读《红星照耀中国》</span></div>
+                        <h1><span>我在旧中国</span><span>十三年</span></h1>
+                        <p>埃德加·斯诺 · 复始之旅 · 1928–1941</p>
+                        <div class="quote">“ 一个美国记者与过去中国命运的碰撞 ”</div>
+                        <div class="hero-actions">
+                            <a href="map.html" class="hero-btn primary"><i class="fas fa-map-marked-alt"></i> 开始探索</a>
+                            <a href="network.html" class="hero-btn secondary"><i class="fas fa-network-wired"></i> 全局关系</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-meta" aria-label="数据库数据概览">
+                        <div class="hero-stat"><strong id="locationCount">--</strong><span>重要地点</span></div>
+                        <div class="hero-stat"><strong id="eventCount">--</strong><span>历史事件</span></div>
+                        <div class="hero-stat"><strong id="personCount">--</strong><span>核心人物</span></div>
+                        <div class="hero-stat"><strong id="relationCount">--</strong><span>人物关系</span></div>
+                        <div class="hero-stat"><strong id="workCount">--</strong><span>著作/报刊</span></div>
+                        <div class="hero-stat"><strong id="orgCount">--</strong><span>组织机构</span></div>
+                </div>
+            </div>
+            <!-- 第二页：视频介绍 -->
+            <div class="carousel-slide">
+                <div class="video-slide-content">
+                    <div class="video-container">
+                        <video controls preload="metadata">
+                            <source src="videos/red-star-china-precious-footage.mp4" type="video/mp4">
+                            当前浏览器不支持本地视频播放。
+                        </video>
+                    </div>
+                    <div class="video-caption">
+                        <h3> 书籍导读：《我在旧中国十三年》</h3>
+                        <p>本视频介绍斯诺在华十三年的经历及《复始之旅》的诞生背景。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="carousel-dots">
+            <span class="dot active" data-index="0"></span>
+            <span class="dot" data-index="1"></span>
+        </div>
+        <button class="carousel-prev" aria-label="上一页">❮</button>
+        <button class="carousel-next" aria-label="下一页">❯</button>
+    </div>
+        <div class="db-info">
+            <i class="fas fa-database"></i> 数据库说明
+            <p>本数据库基于埃德加·斯诺自传《我在旧中国十三年》及《复始之旅》（即《红星照耀中国》的原始素材），提取其1928–1941年间在中国的关键足迹。特别适合青少年读者通过<strong>时空足迹</strong>、<strong>大事件年历</strong>、<strong>关系探索</strong>等模块，直观理解《红星照耀中国》背后的历史现场。涵盖<strong><span id="descLocationCount">--</span>个重要地点</strong>、<strong><span id="descEventCount">--</span>个历史事件</strong>、<strong><span id="descPersonCount">--</span>位核心人物</strong>、<strong><span id="descRelationCount">--</span>条人物关系</strong>、<strong><span id="descWorkCount">--</span>部著作/报刊</strong>、<strong><span id="descOrgCount">--</span>个组织机构</strong>。通过多种方式，呈现一位美国记者如何从旁观者成长为中国革命见证者的历程。点击下方模块开始探索。</p>
+            <div class="data-source">数据来源：埃德加·斯诺《我在旧中国十三年》（三联书店1973年版）及《复始之旅》｜ 推荐阅读：《红星照耀中国》（青少版）</div>
+        </div>
+        <div class="card-grid">
+            <div class="module-card" onclick="location.href='map.html'">
+                <div class="module-icon"><i class="fas fa-map-marked-alt"></i></div>
+                <h3>时空足迹</h3>
+                <p>探寻斯诺在中国的关键地标与事件</p>
+            </div>
+            <div class="module-card" onclick="location.href='network.html'">
+                <div class="module-icon"><i class="fas fa-network-wired"></i></div>
+                <h3>关系探索</h3>
+                <p>查看全局关系，也可进入人物关系</p>
+            </div>
+            <div class="module-card" onclick="location.href='timeline.html'">
+                <div class="module-icon"><i class="fas fa-timeline"></i></div>
+                <h3>大事件年历</h3>
+                <p>竖屏时间轴 · 历史回响</p>
+            </div>
+            <div class="module-card" onclick="location.href='browse.html'">
+                <div class="module-icon"><i class="fas fa-th-large"></i></div>
+                <h3>分类浏览</h3>
+                <p>结构化的书籍内信息查询</p>
+            </div>
+        </div>
+        <footer>数据基于《我在旧中国十三年》及《复始之旅》整理 | 纪念斯诺诞辰</footer>
+    </div>
+    <script src="js/data.js"></script>
+    <script>
+        const dataCounts = {
+            locations: typeof locations !== 'undefined' ? locations.length : '--',
+            events: typeof eventsData !== 'undefined' ? eventsData.length : '--',
+            persons: typeof persons !== 'undefined' ? persons.length : '--',
+            relations: typeof relations !== 'undefined' ? relations.length : '--',
+            works: typeof works !== 'undefined' ? works.length : '--',
+            organizations: typeof organizations !== 'undefined' ? organizations.length : '--'
+        };
+        document.getElementById('locationCount').textContent = dataCounts.locations;
+        document.getElementById('eventCount').textContent = dataCounts.events;
+        document.getElementById('personCount').textContent = dataCounts.persons;
+        document.getElementById('relationCount').textContent = dataCounts.relations;
+        document.getElementById('descLocationCount').textContent = dataCounts.locations;
+        document.getElementById('descEventCount').textContent = dataCounts.events;
+        document.getElementById('descPersonCount').textContent = dataCounts.persons;
+        document.getElementById('descRelationCount').textContent = dataCounts.relations;
+        document.getElementById('workCount').textContent = dataCounts.works;
+        document.getElementById('orgCount').textContent = dataCounts.organizations;
+        document.getElementById('descWorkCount').textContent = dataCounts.works;
+        document.getElementById('descOrgCount').textContent = dataCounts.organizations;
+        document.getElementById('globalSearchBtn').addEventListener('click', () => {
+            const q = document.getElementById('globalSearchInput').value.trim();
+            if (q) window.location.href = `search.html?q=${encodeURIComponent(q)}`;
+        });
+        // 轮播逻辑（已取消自动播放）
+        let currentIndex = 0;
+        const slides = document.querySelectorAll('.carousel-slide');
+        const dots = document.querySelectorAll('.dot');
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+            });
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+            currentIndex = index;
+        }
+        function nextSlide() {
+            let newIndex = (currentIndex + 1) % slides.length;
+            showSlide(newIndex);
+        }
+        function prevSlide() {
+            let newIndex = (currentIndex - 1 + slides.length) % slides.length;
+            showSlide(newIndex);
+        }
+        document.querySelector('.carousel-next')?.addEventListener('click', nextSlide);
+        document.querySelector('.carousel-prev')?.addEventListener('click', prevSlide);
+        dots.forEach((dot, idx) => {
+            dot.addEventListener('click', () => showSlide(idx));
+        });
+        // 取消自动轮播（注释掉 startAutoPlay）
+    </script>
+    <script src="js/config.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+    <script src="js/knowledge-base.js"></script>
+    <script src="js/ai-chat.js"></script>
+</body>
+</html>
