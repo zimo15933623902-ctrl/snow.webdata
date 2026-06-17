@@ -19,6 +19,11 @@ body {
     border-bottom: 3px solid #b32d2d;
     box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
+.navbar > div {
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+}
 .nav-btn {
     background: none;
     border: none;
@@ -32,12 +37,77 @@ body {
     transition: 0.2s;
     font-family: inherit;
 }
+#globalSearchInput {
+    max-width: min(260px, 100%);
+}
 .nav-btn i {
     margin-right: 8px;
 }
 .nav-btn.active, .nav-btn:hover {
     background: #b32d2d;
     color: #ffffff;
+}
+.nav-menu {
+    position: relative;
+    display: inline-flex;
+}
+.nav-menu > .nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+.nav-menu .nav-btn i {
+    margin-right: 0;
+}
+.nav-menu .nav-chevron {
+    font-size: 0.78rem;
+    opacity: 0.72;
+}
+.nav-menu.active > .nav-btn,
+.nav-menu:hover > .nav-btn,
+.nav-menu:focus-within > .nav-btn {
+    background: #b32d2d;
+    color: #ffffff;
+}
+.nav-submenu {
+    position: absolute;
+    top: calc(100% + 0.45rem);
+    left: 50%;
+    z-index: 1000;
+    display: grid;
+    min-width: 190px;
+    padding: 0.45rem;
+    border: 1px solid #eadfd4;
+    border-radius: 14px;
+    background: rgba(255,255,255,0.98);
+    box-shadow: 0 16px 30px rgba(68,42,28,0.13);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -0.35rem);
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
+}
+.nav-menu:hover .nav-submenu,
+.nav-menu:focus-within .nav-submenu {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+}
+.nav-subitem {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.62rem 0.75rem;
+    border-radius: 10px;
+    color: #3a3a3a;
+    font-size: 0.98rem;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.nav-subitem:hover,
+.nav-subitem.active {
+    background: rgba(179,45,45,0.1);
+    color: #b32d2d;
 }
 .page-container {
     max-width: 1400px;
@@ -95,16 +165,32 @@ body {
 /* 数据库说明卡片 */
 .db-info {
     background: #fefefe;
-    border-left: 5px solid #b32d2d;
-    padding: 1.2rem 1.8rem;
+    position: relative;
+    overflow: hidden;
+    border-left: 0;
+    padding: 1.2rem 1.8rem 1.2rem 2.3rem;
     margin-bottom: 2rem;
     border-radius: 16px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+.db-info::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 7px;
+    background: #b32d2d;
 }
 .db-info i {
     color: #b32d2d;
     font-size: 1.3rem;
     margin-right: 10px;
+}
+.db-info p {
+    margin-top: 0.35rem;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
 }
 .db-info strong {
     color: #b32d2d;
@@ -117,29 +203,22 @@ body {
     padding-top: 0.6rem;
 }
 .card-grid {
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    display: flex;
     gap: 1.5rem;
-    max-width: 1120px;
-    margin: 2rem auto;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 2rem 0;
 }
 .module-card {
     background: #ffffff;
     border-radius: 20px;
-    grid-column: span 2;
-    min-height: 210px;
+    width: 260px;
     padding: 2rem 1rem;
     text-align: center;
     cursor: pointer;
     transition: all 0.25s ease;
     border: 1px solid #e0e0e0;
     box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-}
-.module-card:nth-child(4) {
-    grid-column: 2 / span 2;
-}
-.module-card:nth-child(5) {
-    grid-column: 4 / span 2;
 }
 .module-card:hover {
     transform: translateY(-6px);
@@ -394,6 +473,29 @@ h2 {
         padding: 0.6rem;
     }
 }
+@media (max-width: 640px) {
+    .navbar {
+        padding: 0.8rem 1rem;
+        gap: 0.75rem;
+    }
+    .nav-btn {
+        font-size: 0.95rem;
+        padding: 0.45rem 0.8rem;
+    }
+    .nav-menu {
+        position: static;
+    }
+    .nav-submenu {
+        left: 1rem;
+        right: 1rem;
+        min-width: 0;
+        transform: translateY(-0.25rem);
+    }
+    .nav-menu:hover .nav-submenu,
+    .nav-menu:focus-within .nav-submenu {
+        transform: translateY(0);
+    }
+}
 
 /* ========== AI 悬浮球与对话框 ========== */
 #ai-chat-container {
@@ -582,20 +684,18 @@ h2 {
     box-shadow: 0 20px 40px rgba(0,0,0,0.3);
     margin-bottom: 2rem;
 }
-.video-container iframe,
 .video-container video {
     width: 100%;
     height: 100%;
     border: none;
     display: block;
-}
-.video-container video {
     object-fit: contain;
+    background: #000;
 }
 .video-caption h3 {
     color: #ffe7c0;
     font-size: 1.8rem;
-    margin-bottom: 0;
+    margin-bottom: 0.5rem;
 }
 .video-caption p {
     color: rgba(255,255,255,0.85);
@@ -641,48 +741,6 @@ h2 {
 .carousel-next { right: 20px; }
 @media (max-width: 900px) {
     .hero-content { grid-template-columns: 1fr; text-align: center; }
-    .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .module-card,
-    .module-card:nth-child(4),
-    .module-card:nth-child(5) {
-        grid-column: auto;
-    }
     .video-container { width: 95%; }
     .carousel-prev, .carousel-next { font-size: 1.5rem; padding: 0.2rem 0.8rem; }
-}
-@media (max-width: 560px) {
-    .card-grid { grid-template-columns: 1fr; }
-}
-
-.home-module-grid {
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 1.5rem;
-    max-width: 1120px;
-    margin: 2rem auto;
-}
-.home-module-grid .module-card {
-    grid-column: span 2;
-    width: auto;
-}
-.home-module-grid .module-card:nth-child(4) {
-    grid-column: 2 / span 2;
-}
-.home-module-grid .module-card:nth-child(5) {
-    grid-column: 4 / span 2;
-}
-@media (max-width: 900px) {
-    .home-module-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .home-module-grid .module-card,
-    .home-module-grid .module-card:nth-child(4),
-    .home-module-grid .module-card:nth-child(5) {
-        grid-column: auto;
-    }
-}
-@media (max-width: 560px) {
-    .home-module-grid {
-        grid-template-columns: 1fr;
-    }
 }

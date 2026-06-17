@@ -7,7 +7,7 @@ function normalize(str) {
     return String(str).trim().toLowerCase().replace(/[，,、()（）]/g, '');
 }
 
-// 手动映射：子地点应继承哪些父地点的事件
+// 手动映射：子地点应继承哪些母地点的事件
 // 基于 Excel 中的 Location 和 Event 数据生成
 const parentLocationMap = {
     // 上海市的子地点（继承上海的事件）
@@ -206,6 +206,10 @@ function initMap() {
                 mapInstance.setView([35.0, 110.0], 5);
             }
         }, 200);
+
+        // 暴露全局变量供外部定位使用
+        window.mapInstance = mapInstance;
+        window.markers = markers;
         
         console.log('=== 地图初始化完成 ===');
     } catch (error) {
